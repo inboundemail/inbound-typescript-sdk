@@ -32,43 +32,60 @@ if (error) {
 }
 ```
 
-## 🏗️ Hierarchical Structure (New in v4.0.0)
+## 🏗️ Unified Email API (New in v5.0.0)
 
-The SDK now uses a logical hierarchical structure:
+The SDK now uses a unified email structure under `inbound.email.*`:
 
 ```typescript
-// 📧 Inbound Email Management
-inbound.mail.list()           // List received emails
-inbound.mail.get(id)          // Get specific email
-inbound.mail.thread(id)       // Get email thread
-inbound.mail.markRead(id)     // Mark as read
-inbound.mail.archive(id)      // Archive email
-inbound.mail.reply(params)    // Reply to email
+// 📧 Received Email Management (NEW - unified under email.received)
+inbound.email.received.list()           // List received emails
+inbound.email.received.get(id)          // Get specific received email
+inbound.email.received.thread(id)       // Get email thread
+inbound.email.received.markRead(id)     // Mark as read
+inbound.email.received.archive(id)      // Archive email
+inbound.email.received.reply(params)    // Reply to received email
 
-// 📤 Outbound Email Management  
-inbound.email.send(data)           // Send email immediately
-inbound.email.schedule(data)       // Schedule email
-inbound.email.reply(id, data)      // Reply to sent email
-inbound.email.listScheduled()      // List scheduled emails
-inbound.email.cancel(id)           // Cancel scheduled email
+// 📤 Sent Email Management (NEW - organized under email.sent)
+inbound.email.send(data)                // Send email immediately
+inbound.email.schedule(data)            // Schedule email
+inbound.email.sent.get(id)              // Get sent email by ID
+inbound.email.sent.reply(id, data)      // Reply to sent email
+inbound.email.sent.listScheduled()      // List scheduled emails
+inbound.email.sent.getScheduled(id)     // Get specific scheduled email
+inbound.email.sent.cancel(id)           // Cancel scheduled email
 
-// 📮 Email Address Management (NEW - nested under email)
-inbound.email.address.create(data)       // Create email address
-inbound.email.address.list()             // List email addresses
-inbound.email.address.get(id)            // Get address details
-inbound.email.address.update(id, data)   // Update address routing
-inbound.email.address.delete(id)         // Remove address
+// 🔄 Universal Email Access
+inbound.email.get(id)                   // Get ANY email (received or sent)
+
+// 📮 Email Address Management (nested under email)
+inbound.email.address.create(data)      // Create email address
+inbound.email.address.list()            // List email addresses
+inbound.email.address.get(id)           // Get address details
+inbound.email.address.update(id, data)  // Update address routing
+inbound.email.address.delete(id)        // Remove address
 
 // 🌐 Domain Management
-inbound.domain.create(data)        // Add new domain
-inbound.domain.list()              // List all domains
-inbound.domain.verify(id)          // Verify domain
-inbound.domain.getDnsRecords(id)   // Get DNS records
+inbound.domain.create(data)             // Add new domain
+inbound.domain.list()                   // List all domains
+inbound.domain.verify(id)               // Verify domain
+inbound.domain.getDnsRecords(id)        // Get DNS records
 
 // 🔗 Endpoint Management (Webhooks & Forwarding)
-inbound.endpoint.create(data)      // Create endpoint
-inbound.endpoint.list()            // List endpoints
-inbound.endpoint.test(id)          // Test endpoint
+inbound.endpoint.create(data)           // Create endpoint
+inbound.endpoint.list()                 // List endpoints
+inbound.endpoint.test(id)               // Test endpoint
+```
+
+### ⚠️ Deprecated Methods
+
+The old `inbound.mail.*` methods are deprecated but still work with console warnings:
+
+```typescript
+// ❌ DEPRECATED - Will be removed in v6.0.0
+inbound.mail.list()           // Use inbound.email.received.list() instead
+inbound.mail.get(id)          // Use inbound.email.received.get() instead
+inbound.mail.markRead(id)     // Use inbound.email.received.markRead() instead
+// ... etc
 ```
 
 ## 📊 Response Pattern

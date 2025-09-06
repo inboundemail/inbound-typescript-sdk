@@ -521,24 +521,30 @@ export interface GetEmailByIdResponse {
 // Reply API Types - Enhanced with full attachment support
 export interface PostEmailReplyRequest {
   from: string
+  from_name?: string      // Optional sender name for display
   to?: string | string[]
   cc?: string | string[]
   bcc?: string | string[]
   subject?: string
   text?: string
   html?: string
-  replyTo?: string | string[]
+  replyTo?: string | string[]    // camelCase (Resend-compatible)
+  reply_to?: string | string[]    // snake_case (legacy)
   headers?: Record<string, string>
   attachments?: AttachmentData[]
   tags?: Array<{
     name: string
     value: string
   }>
-  includeOriginal?: boolean
+  includeOriginal?: boolean     // camelCase (Resend-compatible)
+  include_original?: boolean    // snake_case (legacy)
+  simple?: boolean              // Use simplified reply mode (faster, lighter)
 }
 
 export interface PostEmailReplyResponse {
   id: string
+  messageId: string       // Inbound message ID (used for threading)
+  awsMessageId: string    // AWS SES Message ID
 }
 
 // Email Scheduling API Types

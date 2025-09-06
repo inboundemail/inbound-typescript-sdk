@@ -124,34 +124,43 @@ export class InboundEmailClient {
 
   /**
    * Mail API - for managing received emails (inbound)
+   * @deprecated Use `email.received` instead. This will be removed in a future version.
    */
   mail = {
     /**
      * List all emails in the mailbox
+     * @deprecated Use `email.received.list()` instead
      */
     list: async (params?: GetMailRequest): Promise<ApiResponse<GetMailResponse>> => {
+      console.warn('⚠️ mail.list() is deprecated. Use email.received.list() instead.')
       const queryString = params ? buildQueryString(params) : ''
       return this.request<GetMailResponse>(`/mail${queryString}`)
     },
 
     /**
      * Get a specific email by ID
+     * @deprecated Use `email.received.get()` instead
      */
     get: async (id: string): Promise<ApiResponse<GetMailByIdResponse>> => {
+      console.warn('⚠️ mail.get() is deprecated. Use email.received.get() instead.')
       return this.request<GetMailByIdResponse>(`/mail/${id}`)
     },
 
     /**
      * Get email thread/conversation by email ID
+     * @deprecated Use `email.received.thread()` instead
      */
     thread: async (id: string): Promise<ApiResponse<any>> => {
+      console.warn('⚠️ mail.thread() is deprecated. Use email.received.thread() instead.')
       return this.request<any>(`/mail/${id}/thread`)
     },
 
     /**
      * Mark email as read
+     * @deprecated Use `email.received.markRead()` instead
      */
     markRead: async (id: string): Promise<ApiResponse<any>> => {
+      console.warn('⚠️ mail.markRead() is deprecated. Use email.received.markRead() instead.')
       return this.request<any>(`/mail/${id}`, {
         method: 'PATCH',
         body: JSON.stringify({ isRead: true }),
@@ -160,8 +169,10 @@ export class InboundEmailClient {
 
     /**
      * Mark email as unread
+     * @deprecated Use `email.received.markUnread()` instead
      */
     markUnread: async (id: string): Promise<ApiResponse<any>> => {
+      console.warn('⚠️ mail.markUnread() is deprecated. Use email.received.markUnread() instead.')
       return this.request<any>(`/mail/${id}`, {
         method: 'PATCH',
         body: JSON.stringify({ isRead: false }),
@@ -170,8 +181,10 @@ export class InboundEmailClient {
 
     /**
      * Archive email
+     * @deprecated Use `email.received.archive()` instead
      */
     archive: async (id: string): Promise<ApiResponse<any>> => {
+      console.warn('⚠️ mail.archive() is deprecated. Use email.received.archive() instead.')
       return this.request<any>(`/mail/${id}`, {
         method: 'PATCH',
         body: JSON.stringify({ isArchived: true }),
@@ -180,8 +193,10 @@ export class InboundEmailClient {
 
     /**
      * Unarchive email
+     * @deprecated Use `email.received.unarchive()` instead
      */
     unarchive: async (id: string): Promise<ApiResponse<any>> => {
+      console.warn('⚠️ mail.unarchive() is deprecated. Use email.received.unarchive() instead.')
       return this.request<any>(`/mail/${id}`, {
         method: 'PATCH',
         body: JSON.stringify({ isArchived: false }),
@@ -190,8 +205,10 @@ export class InboundEmailClient {
 
     /**
      * Reply to an email
+     * @deprecated Use `email.received.reply()` instead
      */
     reply: async (params: PostMailRequest): Promise<ApiResponse<PostMailResponse>> => {
+      console.warn('⚠️ mail.reply() is deprecated. Use email.received.reply() instead.')
       return this.request<PostMailResponse>('/mail', {
         method: 'POST',
         body: JSON.stringify(params),
@@ -200,8 +217,10 @@ export class InboundEmailClient {
 
     /**
      * Bulk operations on multiple emails
+     * @deprecated Use `email.received.bulk()` instead
      */
     bulk: async (emailIds: string[], updates: { isRead?: boolean; isArchived?: boolean }): Promise<ApiResponse<any>> => {
+      console.warn('⚠️ mail.bulk() is deprecated. Use email.received.bulk() instead.')
       return this.request<any>('/mail/bulk', {
         method: 'POST',
         body: JSON.stringify({ emailIds, updates }),
@@ -210,7 +229,7 @@ export class InboundEmailClient {
   }
 
   /**
-   * Email API - for managing outbound emails and email addresses
+   * Email API - Unified interface for managing all emails (received and sent)
    */
   email = {
     /**
@@ -243,16 +262,175 @@ export class InboundEmailClient {
     },
 
     /**
-     * Get a sent email by ID
+     * Get an email by ID - works for both received and sent emails
+     * For received emails, use received.get() for better type safety
+     * For sent emails, use sent.get() for better type safety
      */
-    get: async (id: string): Promise<ApiResponse<GetEmailByIdResponse>> => {
+    get: async (id: string): Promise<ApiResponse<GetMailByIdResponse | GetEmailByIdResponse>> => {
+      // First try to get as received email
+      try {
+        const receivedEmail = await this.request<GetMailByIdResponse>(`/mail/${id}`)
+        if (receivedEmail.data) {
+          return receivedEmail
+        }
+      } catch (error) {
+        // If that fails, try as sent email
+        return this.request<GetEmailByIdResponse>(`/emails/${id}`)
+      }
+      
+      // If we get here, try sent email as fallback
       return this.request<GetEmailByIdResponse>(`/emails/${id}`)
     },
 
     /**
-     * Reply to an email by ID with optional attachments
+     * Received emails API - for managing inbound emails
+     */
+    received: {
+      /**
+       * List all received emails in the mailbox
+       */
+      list: async (params?: GetMailRequest): Promise<ApiResponse<GetMailResponse>> => {
+        const queryString = params ? buildQueryString(params) : ''
+        return this.request<GetMailResponse>(`/mail${queryString}`)
+      },
+
+      /**
+       * Get a specific received email by ID
+       */
+      get: async (id: string): Promise<ApiResponse<GetMailByIdResponse>> => {
+        return this.request<GetMailByIdResponse>(`/mail/${id}`)
+      },
+
+      /**
+       * Get email thread/conversation by email ID
+       */
+      thread: async (id: string): Promise<ApiResponse<any>> => {
+        return this.request<any>(`/mail/${id}/thread`)
+      },
+
+      /**
+       * Mark received email as read
+       */
+      markRead: async (id: string): Promise<ApiResponse<any>> => {
+        return this.request<any>(`/mail/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ isRead: true }),
+        })
+      },
+
+      /**
+       * Mark received email as unread
+       */
+      markUnread: async (id: string): Promise<ApiResponse<any>> => {
+        return this.request<any>(`/mail/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ isRead: false }),
+        })
+      },
+
+      /**
+       * Archive received email
+       */
+      archive: async (id: string): Promise<ApiResponse<any>> => {
+        return this.request<any>(`/mail/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ isArchived: true }),
+        })
+      },
+
+      /**
+       * Unarchive received email
+       */
+      unarchive: async (id: string): Promise<ApiResponse<any>> => {
+        return this.request<any>(`/mail/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ isArchived: false }),
+        })
+      },
+
+      /**
+       * Reply to a received email
+       */
+      reply: async (params: PostMailRequest): Promise<ApiResponse<PostMailResponse>> => {
+        return this.request<PostMailResponse>('/mail', {
+          method: 'POST',
+          body: JSON.stringify(params),
+        })
+      },
+
+      /**
+       * Bulk operations on multiple received emails
+       */
+      bulk: async (emailIds: string[], updates: { isRead?: boolean; isArchived?: boolean }): Promise<ApiResponse<any>> => {
+        return this.request<any>('/mail/bulk', {
+          method: 'POST',
+          body: JSON.stringify({ emailIds, updates }),
+        })
+      },
+    },
+
+    /**
+     * Sent emails API - for managing outbound emails
+     */
+    sent: {
+      /**
+       * Get a sent email by ID
+       */
+      get: async (id: string): Promise<ApiResponse<GetEmailByIdResponse>> => {
+        return this.request<GetEmailByIdResponse>(`/emails/${id}`)
+      },
+
+      /**
+       * Reply to a sent email by ID with optional attachments
+       */
+      reply: async (id: string, params: PostEmailReplyRequest, options?: IdempotencyOptions): Promise<ApiResponse<PostEmailReplyResponse>> => {
+        // Build headers with optional idempotency key
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        }
+        
+        if (options?.idempotencyKey) {
+          headers['Idempotency-Key'] = options.idempotencyKey
+        }
+        
+        return this.request<PostEmailReplyResponse>(`/emails/${id}/reply`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(params),
+        })
+      },
+
+      /**
+       * List scheduled emails with filtering and pagination
+       */
+      listScheduled: async (params?: GetScheduledEmailsRequest): Promise<ApiResponse<GetScheduledEmailsResponse>> => {
+        const queryString = params ? buildQueryString(params) : ''
+        return this.request<GetScheduledEmailsResponse>(`/emails/schedule${queryString}`)
+      },
+
+      /**
+       * Get details of a specific scheduled email
+       */
+      getScheduled: async (id: string): Promise<ApiResponse<GetScheduledEmailResponse>> => {
+        return this.request<GetScheduledEmailResponse>(`/emails/schedule/${id}`)
+      },
+
+      /**
+       * Cancel a scheduled email (only works if status is 'scheduled')
+       */
+      cancel: async (id: string): Promise<ApiResponse<DeleteScheduledEmailResponse>> => {
+        return this.request<DeleteScheduledEmailResponse>(`/emails/schedule/${id}`, {
+          method: 'DELETE',
+        })
+      },
+    },
+
+    /**
+     * Reply to an email by ID with optional attachments (DEPRECATED - use sent.reply() instead)
+     * @deprecated Use `sent.reply()` instead
      */
     reply: async (id: string, params: PostEmailReplyRequest, options?: IdempotencyOptions): Promise<ApiResponse<PostEmailReplyResponse>> => {
+      console.warn('⚠️ email.reply() is deprecated. Use email.sent.reply() instead.')
       // Build headers with optional idempotency key
       const headers: Record<string, string> = {
         'Content-Type': 'application/json'
@@ -272,26 +450,7 @@ export class InboundEmailClient {
     /**
      * Schedule an email to be sent at a future time
      * Supports both ISO 8601 dates and natural language (e.g., "in 1 hour", "tomorrow at 9am")
-     * 
-     * @example
-     * // Schedule with natural language
-     * const { data, error } = await inbound.email.schedule({
-     *   from: "sender@domain.com",
-     *   to: "recipient@domain.com", 
-     *   subject: "Scheduled Email",
-     *   html: "<p>This will be sent in 1 hour</p>",
-     *   scheduled_at: "in 1 hour",
-     *   timezone: "America/New_York"
-     * })
-     * 
-     * // Schedule with ISO 8601 date
-     * const { data, error } = await inbound.email.schedule({
-     *   from: "sender@domain.com",
-     *   to: "recipient@domain.com",
-     *   subject: "Scheduled Email", 
-     *   html: "<p>This will be sent at a specific time</p>",
-     *   scheduled_at: "2024-12-25T09:00:00Z"
-     * })
+     * @deprecated This method will remain at the top level for backward compatibility
      */
     schedule: async (params: PostScheduleEmailRequest, options?: IdempotencyOptions): Promise<ApiResponse<PostScheduleEmailResponse>> => {
       // Process React component if provided
@@ -315,53 +474,40 @@ export class InboundEmailClient {
 
     /**
      * List scheduled emails with filtering and pagination
-     * 
-     * @example
-     * // List all scheduled emails
-     * const { data, error } = await inbound.email.listScheduled()
-     * 
-     * // List only pending scheduled emails
-     * const { data, error } = await inbound.email.listScheduled({ status: 'scheduled', limit: 10 })
+     * @deprecated Use sent.listScheduled() instead
      */
     listScheduled: async (params?: GetScheduledEmailsRequest): Promise<ApiResponse<GetScheduledEmailsResponse>> => {
+      console.warn('⚠️ email.listScheduled() is deprecated. Use email.sent.listScheduled() instead.')
       const queryString = params ? buildQueryString(params) : ''
       return this.request<GetScheduledEmailsResponse>(`/emails/schedule${queryString}`)
     },
 
     /**
      * Get details of a specific scheduled email
-     * 
-     * @example
-     * const { data, error } = await inbound.email.getScheduled("email-id")
-     * if (data) {
-     *   console.log("Status:", data.status)
-     *   console.log("Scheduled for:", data.scheduled_at)
-     * }
+     * @deprecated Use sent.getScheduled() instead
      */
     getScheduled: async (id: string): Promise<ApiResponse<GetScheduledEmailResponse>> => {
+      console.warn('⚠️ email.getScheduled() is deprecated. Use email.sent.getScheduled() instead.')
       return this.request<GetScheduledEmailResponse>(`/emails/schedule/${id}`)
     },
 
     /**
      * Cancel a scheduled email (only works if status is 'scheduled')
-     * 
-     * @example
-     * const { data, error } = await inbound.email.cancel("scheduled-email-id")
-     * if (data) {
-     *   console.log("Email cancelled at:", data.cancelled_at)
-     * }
+     * @deprecated Use sent.cancel() instead
      */
     cancel: async (id: string): Promise<ApiResponse<DeleteScheduledEmailResponse>> => {
+      console.warn('⚠️ email.cancel() is deprecated. Use email.sent.cancel() instead.')
       return this.request<DeleteScheduledEmailResponse>(`/emails/schedule/${id}`, {
         method: 'DELETE',
       })
     },
 
     /**
-     * @deprecated Use cancel() instead
+     * @deprecated Use sent.cancel() instead
      * Cancel a scheduled email (only works if status is 'scheduled')
      */
     cancelScheduled: async (id: string): Promise<ApiResponse<DeleteScheduledEmailResponse>> => {
+      console.warn('⚠️ email.cancelScheduled() is deprecated. Use email.sent.cancel() instead.')
       return this.request<DeleteScheduledEmailResponse>(`/emails/schedule/${id}`, {
         method: 'DELETE',
       })
