@@ -6,14 +6,28 @@ The official SDK for the Inbound Email API v2. This SDK provides a simple and in
 
 ## Installation
 
+Choose your preferred package name - both contain identical functionality:
+
 ```bash
+# Full scoped name
 npm install @inboundemail/sdk
+
+# Short alias
+npm install inbnd
 ```
+
+Both packages are published simultaneously and contain the same code. Use whichever name you prefer!
 
 ## Quick Start
 
+Both package names work identically:
+
 ```typescript
+// Using full scoped name
 import { Inbound } from '@inboundemail/sdk'
+
+// Or using short alias  
+import { Inbound } from 'inbnd'
 
 const inbound = new Inbound(process.env.INBOUND_API_KEY!)
 
@@ -113,7 +127,9 @@ The SDK includes a streamlined `reply()` method that makes it easy to reply to e
 ### Quick Setup
 
 ```typescript
+// Works with either package name
 import { Inbound, type InboundWebhookPayload, isInboundWebhook } from '@inboundemail/sdk'
+// import { Inbound, type InboundWebhookPayload, isInboundWebhook } from 'inbnd'
 import { NextRequest, NextResponse } from 'next/server'
 
 const inbound = new Inbound(process.env.INBOUND_API_KEY!)
@@ -418,12 +434,14 @@ console.log('Email sent successfully:', data.id)
 The SDK is fully typed with TypeScript:
 
 ```typescript
+// Type imports work with either package name
 import type { 
   ApiResponse,
   PostEmailsRequest,
   PostEmailsResponse,
   InboundWebhookPayload 
 } from '@inboundemail/sdk'
+// } from 'inbnd'
 
 // Type-safe email sending
 const emailRequest: PostEmailsRequest = {
@@ -440,7 +458,9 @@ const response: ApiResponse<PostEmailsResponse> = await inbound.email.send(email
 
 - [API Documentation](https://docs.inbound.new)
 - [GitHub Repository](https://github.com/inboundemail/sdk)
-- [NPM Package](https://www.npmjs.com/package/@inboundemail/sdk)
+- NPM Packages:
+  - [@inboundemail/sdk](https://www.npmjs.com/package/@inboundemail/sdk) - Full scoped name
+  - [inbnd](https://www.npmjs.com/package/inbnd) - Short alias
 
 ## 📄 License
 

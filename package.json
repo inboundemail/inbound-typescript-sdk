@@ -1,6 +1,6 @@
 {
   "name": "@inboundemail/sdk",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "description": "Official SDK for Inbound Email API",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -27,9 +27,12 @@
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "prepublishOnly": "npm run build",
-    "publish:build": "npm run build && npm publish",
-    "publish:patch": "npm version patch && npm run build && npm publish",
-    "publish:breaking": "npm version minor && npm run build && npm publish"
+    "publish:single": "npm run build && npm publish",
+    "publish:dual": "bun run scripts/dual-publish.ts",
+    "publish:patch": "bun run scripts/dual-version.ts patch && bun run publish:dual",
+    "publish:minor": "bun run scripts/dual-version.ts minor && bun run publish:dual",
+    "publish:major": "bun run scripts/dual-version.ts major && bun run publish:dual",
+    "publish:breaking": "bun run scripts/dual-version.ts minor && bun run publish:dual"
   },
   "keywords": [
     "inbound",
