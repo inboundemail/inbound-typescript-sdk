@@ -1,5 +1,5 @@
-import { multipartFormRequestOptions, createForm } from 'inbound/internal/uploads';
-import { toFile } from 'inbound/core/uploads';
+import { multipartFormRequestOptions, createForm } from 'inbnd/internal/uploads';
+import { toFile } from 'inbnd/core/uploads';
 
 describe('form data validation', () => {
   test('valid values do not error', async () => {

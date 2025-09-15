@@ -1,4 +1,4 @@
-import { createPathTagFunction, encodeURIPath } from 'inbound/internal/utils/path';
+import { createPathTagFunction, encodeURIPath } from 'inbnd/internal/utils/path';
 import { inspect } from 'node:util';
 import { runInNewContext } from 'node:vm';
 

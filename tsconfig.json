@@ -9,8 +9,8 @@
     "esModuleInterop": true,
     "baseUrl": "./",
     "paths": {
-      "inbound/*": ["src/*"],
-      "inbound": ["src/index.ts"]
+      "inbnd/*": ["src/*"],
+      "inbnd": ["src/index.ts"]
     },
     "noEmit": true,
 
