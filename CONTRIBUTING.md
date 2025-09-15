@@ -55,12 +55,12 @@ $ cd inbound-typescript-sdk
 # With yarn
 $ yarn link
 $ cd ../my-package
-$ yarn link inbound
+$ yarn link inbnd
 
 # With pnpm
 $ pnpm link --global
 $ cd ../my-package
-$ pnpm link -—global inbound
+$ pnpm link -—global inbnd
 ```
 
 ## Running tests

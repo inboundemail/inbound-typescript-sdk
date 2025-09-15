@@ -5,8 +5,8 @@
   "compilerOptions": {
     "rootDir": "./dist/src",
     "paths": {
-      "inbound/*": ["dist/src/*"],
-      "inbound": ["dist/src/index.ts"]
+      "inbnd/*": ["dist/src/*"],
+      "inbnd": ["dist/src/index.ts"]
     },
     "noEmit": false,
     "declaration": true,
