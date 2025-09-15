@@ -112,11 +112,6 @@ export interface ClientOptions {
   apiKey?: string | null | undefined;
 
   /**
-   * JWT token for session-based authentication
-   */
-  bearerToken?: string | null | undefined;
-
-  /**
    * Specifies the environment to use for the API.
    *
    * Each environment maps to a different base URL:
@@ -199,7 +194,6 @@ export interface ClientOptions {
  */
 export class Inbound {
   apiKey: string | null;
-  bearerToken: string | null;
 
   baseURL: string;
   maxRetries: number;
@@ -217,7 +211,6 @@ export class Inbound {
    * API Client for interfacing with the Inbound API.
    *
    * @param {string | null | undefined} [opts.apiKey=process.env['INBOUND_API_KEY'] ?? null]
-   * @param {string | null | undefined} [opts.bearerToken=process.env['INBOUND_BEARER_TOKEN'] ?? null]
    * @param {Environment} [opts.environment=production] - Specifies the environment URL to use for the API.
    * @param {string} [opts.baseURL=process.env['INBOUND_BASE_URL'] ?? https://inbound.new/api/v2] - Override the default base URL for the API.
    * @param {number} [opts.timeout=1 minute] - The maximum amount of time (in milliseconds) the client will wait for a response before timing out.
@@ -230,12 +223,10 @@ export class Inbound {
   constructor({
     baseURL = readEnv('INBOUND_BASE_URL'),
     apiKey = readEnv('INBOUND_API_KEY') ?? null,
-    bearerToken = readEnv('INBOUND_BEARER_TOKEN') ?? null,
     ...opts
   }: ClientOptions = {}) {
     const options: ClientOptions = {
       apiKey,
-      bearerToken,
       ...opts,
       baseURL,
       environment: opts.environment ?? 'production',
@@ -265,7 +256,6 @@ export class Inbound {
     this._options = options;
 
     this.apiKey = apiKey;
-    this.bearerToken = bearerToken;
   }
 
   /**
@@ -283,7 +273,6 @@ export class Inbound {
       fetch: this.fetch,
       fetchOptions: this.fetchOptions,
       apiKey: this.apiKey,
-      bearerToken: this.bearerToken,
       ...options,
     });
     return client;
@@ -308,34 +297,16 @@ export class Inbound {
       return;
     }
 
-    if (this.bearerToken && values.get('authorization')) {
-      return;
-    }
-    if (nulls.has('authorization')) {
-      return;
-    }
-
     throw new Error(
-      'Could not resolve authentication method. Expected either apiKey or bearerToken to be set. Or for one of the "Authorization" or "Authorization" headers to be explicitly omitted',
+      'Could not resolve authentication method. Expected the apiKey to be set. Or for the "Authorization" headers to be explicitly omitted',
     );
   }
 
   protected async authHeaders(opts: FinalRequestOptions): Promise<NullableHeaders | undefined> {
-    return buildHeaders([await this.apiKeyAuth(opts), await this.bearerAuth(opts)]);
-  }
-
-  protected async apiKeyAuth(opts: FinalRequestOptions): Promise<NullableHeaders | undefined> {
     if (this.apiKey == null) {
       return undefined;
     }
     return buildHeaders([{ Authorization: this.apiKey }]);
-  }
-
-  protected async bearerAuth(opts: FinalRequestOptions): Promise<NullableHeaders | undefined> {
-    if (this.bearerToken == null) {
-      return undefined;
-    }
-    return buildHeaders([{ Authorization: `Bearer ${this.bearerToken}` }]);
   }
 
   /**
