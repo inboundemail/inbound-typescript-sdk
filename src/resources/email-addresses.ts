@@ -7,202 +7,356 @@ import { path } from '../internal/utils/path';
 
 export class EmailAddresses extends APIResource {
   /**
-   * POST /email-addresses
+   * Create a new email address for receiving emails and configure AWS SES receipt
+   * rules automatically.
+   *
+   * @example
+   * ```ts
+   * const emailAddress = await client.emailAddresses.create();
+   * ```
    */
-  create(body: EmailAddressCreateParams, options?: RequestOptions): APIPromise<EmailAddressCreateResponse> {
-    return this._client.post('/api/v2/email-addresses', { body, ...options });
+  create(
+    body: EmailAddressCreateParams | null | undefined = {},
+    options?: RequestOptions,
+  ): APIPromise<EmailAddressCreateResponse> {
+    return this._client.post('/v2/email-addresses', { body, ...options });
   }
 
   /**
-   * GET /email-addresses/{id}
+   * Get detailed information about a specific email address including domain and
+   * routing configuration.
+   *
+   * @example
+   * ```ts
+   * const emailAddress = await client.emailAddresses.retrieve(
+   *   '123',
+   * );
+   * ```
    */
   retrieve(id: string, options?: RequestOptions): APIPromise<EmailAddressRetrieveResponse> {
-    return this._client.get(path`/api/v2/email-addresses/${id}`, options);
+    return this._client.get(path`/v2/email-addresses/${id}`, options);
   }
 
   /**
-   * PUT /email-addresses/{id}
+   * Update an email address's routing configuration (endpoint, webhook, or disable
+   * routing).
+   *
+   * @example
+   * ```ts
+   * const emailAddress = await client.emailAddresses.update(
+   *   '123',
+   * );
+   * ```
    */
   update(
     id: string,
-    body: EmailAddressUpdateParams,
+    body: EmailAddressUpdateParams | null | undefined = {},
     options?: RequestOptions,
   ): APIPromise<EmailAddressUpdateResponse> {
-    return this._client.put(path`/api/v2/email-addresses/${id}`, { body, ...options });
+    return this._client.put(path`/v2/email-addresses/${id}`, { body, ...options });
   }
 
   /**
-   * GET /email-addresses
+   * Retrieve all email addresses for the authenticated user with filtering and
+   * pagination options.
+   *
+   * @example
+   * ```ts
+   * const emailAddresses = await client.emailAddresses.list();
+   * ```
    */
   list(
     query: EmailAddressListParams | null | undefined = {},
     options?: RequestOptions,
   ): APIPromise<EmailAddressListResponse> {
-    return this._client.get('/api/v2/email-addresses', { query, ...options });
+    return this._client.get('/v2/email-addresses', { query, ...options });
   }
 
   /**
-   * DELETE /email-addresses/{id}
+   * Permanently delete an email address and update AWS SES receipt rules
+   * accordingly.
+   *
+   * @example
+   * ```ts
+   * const emailAddress = await client.emailAddresses.delete(
+   *   '123',
+   * );
+   * ```
    */
   delete(id: string, options?: RequestOptions): APIPromise<EmailAddressDeleteResponse> {
-    return this._client.delete(path`/api/v2/email-addresses/${id}`, options);
+    return this._client.delete(path`/v2/email-addresses/${id}`, options);
   }
 }
 
 export interface EmailAddressCreateResponse {
-  id: string;
+  id?: string;
 
-  address: string;
+  address?: string;
 
-  createdAt: string;
+  createdAt?: string;
 
-  domain: string;
+  domain?: EmailAddressCreateResponse.Domain;
 
-  domainId: string;
+  domainId?: string;
 
-  endpointId: string;
+  endpointId?: string | null;
 
-  isActive: boolean;
+  isActive?: boolean;
 
-  isReceiptRuleConfigured: boolean;
+  isReceiptRuleConfigured?: boolean;
 
-  receiptRuleName: string;
+  receiptRuleName?: string | null;
 
-  routing: string;
+  routing?: EmailAddressCreateResponse.Routing;
 
-  updatedAt: string;
+  updatedAt?: string;
 
-  userId: string;
-
-  webhookId: string;
+  userId?: string;
 
   warning?: string;
+
+  webhookId?: string | null;
 }
 
-/**
- * GET /api/v2/email-addresses/[id] Gets a specific email address by ID with
- * detailed information Supports both session-based auth and API key auth Has
- * tests? ⏳ Has logging? ✅ Has types? ✅
- */
+export namespace EmailAddressCreateResponse {
+  export interface Domain {
+    id?: string;
+
+    name?: string;
+
+    status?: string;
+  }
+
+  export interface Routing {
+    id?: string | null;
+
+    config?: unknown;
+
+    isActive?: boolean;
+
+    name?: string | null;
+
+    type?: 'webhook' | 'endpoint' | 'none';
+  }
+}
+
 export interface EmailAddressRetrieveResponse {
-  id: string;
+  id?: string;
 
-  address: string;
+  address?: string;
 
-  createdAt: string;
+  createdAt?: string;
 
-  domain: string;
+  domain?: EmailAddressRetrieveResponse.Domain;
 
-  domainId: string;
+  domainId?: string;
 
-  endpointId: string;
+  endpointId?: string | null;
 
-  isActive: boolean;
+  isActive?: boolean;
 
-  isReceiptRuleConfigured: boolean;
+  isReceiptRuleConfigured?: boolean;
 
-  receiptRuleName: string;
+  receiptRuleName?: string | null;
 
-  routing: string;
+  routing?: EmailAddressRetrieveResponse.Routing;
 
-  updatedAt: string;
+  updatedAt?: string;
 
-  userId: string;
+  userId?: string;
 
-  webhookId: string;
+  webhookId?: string | null;
+}
+
+export namespace EmailAddressRetrieveResponse {
+  export interface Domain {
+    id?: string;
+
+    name?: string;
+
+    status?: string;
+  }
+
+  export interface Routing {
+    id?: string | null;
+
+    config?: unknown;
+
+    isActive?: boolean;
+
+    name?: string | null;
+
+    type?: 'webhook' | 'endpoint' | 'none';
+  }
 }
 
 export interface EmailAddressUpdateResponse {
-  id: string;
+  id?: string;
 
-  address: string;
+  address?: string;
 
-  createdAt: string;
+  createdAt?: string;
 
-  domain: string;
+  domain?: EmailAddressUpdateResponse.Domain;
 
-  domainId: string;
+  domainId?: string;
 
-  endpointId: string;
+  endpointId?: string | null;
 
-  isActive: boolean;
+  isActive?: boolean;
 
-  isReceiptRuleConfigured: boolean;
+  isReceiptRuleConfigured?: boolean;
 
-  receiptRuleName: string;
+  receiptRuleName?: string | null;
 
-  routing: string;
+  routing?: EmailAddressUpdateResponse.Routing;
 
-  updatedAt: string;
+  updatedAt?: string;
 
-  userId: string;
-
-  webhookId: string;
+  userId?: string;
 
   warning?: string;
+
+  webhookId?: string | null;
+}
+
+export namespace EmailAddressUpdateResponse {
+  export interface Domain {
+    id?: string;
+
+    name?: string;
+
+    status?: string;
+  }
+
+  export interface Routing {
+    id?: string | null;
+
+    config?: unknown;
+
+    isActive?: boolean;
+
+    name?: string | null;
+
+    type?: 'webhook' | 'endpoint' | 'none';
+  }
 }
 
 export interface EmailAddressListResponse {
-  data: Array<string>;
+  data?: Array<EmailAddressListResponse.Data>;
 
-  pagination: number;
+  pagination?: EmailAddressListResponse.Pagination;
 }
 
-/**
- * DELETE /api/v2/email-addresses/[id] Deletes an email address and cleans up SES
- * rules Supports both session-based auth and API key auth Has tests? ⏳ Has
- * logging? ✅ Has types? ✅
- */
-export interface EmailAddressDeleteResponse {
-  cleanup: string;
+export namespace EmailAddressListResponse {
+  export interface Data {
+    id?: string;
 
-  message: string;
+    address?: string;
+
+    createdAt?: string;
+
+    domain?: Data.Domain;
+
+    domainId?: string;
+
+    endpointId?: string | null;
+
+    isActive?: boolean;
+
+    isReceiptRuleConfigured?: boolean;
+
+    receiptRuleName?: string | null;
+
+    routing?: Data.Routing;
+
+    updatedAt?: string;
+
+    userId?: string;
+
+    webhookId?: string | null;
+  }
+
+  export namespace Data {
+    export interface Domain {
+      id?: string;
+
+      name?: string;
+
+      status?: string;
+    }
+
+    export interface Routing {
+      id?: string | null;
+
+      config?: unknown;
+
+      isActive?: boolean;
+
+      name?: string | null;
+
+      type?: 'webhook' | 'endpoint' | 'none';
+    }
+  }
+
+  export interface Pagination {
+    hasMore?: boolean;
+
+    limit?: number;
+
+    offset?: number;
+
+    total?: number;
+  }
+}
+
+export interface EmailAddressDeleteResponse {
+  cleanup?: EmailAddressDeleteResponse.Cleanup;
+
+  message?: string;
+}
+
+export namespace EmailAddressDeleteResponse {
+  export interface Cleanup {
+    domain?: string;
+
+    emailAddress?: string;
+
+    sesRuleUpdated?: boolean;
+
+    warning?: string;
+  }
 }
 
 export interface EmailAddressCreateParams {
-  address: string;
+  address?: string;
 
-  domainId: string;
+  domainId?: string;
 
-  endpointId?: string;
+  endpointId?: string | null;
 
-  isActive?: boolean;
+  isActive?: boolean | null;
 
-  webhookId?: string;
+  webhookId?: string | null;
 }
 
 export interface EmailAddressUpdateParams {
-  endpointId?: string;
+  endpointId?: string | null;
 
-  isActive?: boolean;
+  isActive?: boolean | null;
 
-  webhookId?: string;
+  webhookId?: string | null;
 }
 
 export interface EmailAddressListParams {
-  /**
-   * domainId parameter
-   */
   domainId?: string;
 
-  /**
-   * isActive parameter
-   */
-  isActive?: 'true' | 'false' | 'undefined';
+  isActive?: 'true' | 'false';
 
-  /**
-   * isReceiptRuleConfigured parameter
-   */
-  isReceiptRuleConfigured?: 'true' | 'false' | 'undefined';
+  isReceiptRuleConfigured?: 'true' | 'false';
 
-  /**
-   * limit parameter
-   */
   limit?: number;
 
-  /**
-   * offset parameter
-   */
   offset?: number;
 }
 

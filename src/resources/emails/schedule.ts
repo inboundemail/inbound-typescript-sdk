@@ -3,164 +3,187 @@
 import { APIResource } from '../../core/resource';
 import { APIPromise } from '../../core/api-promise';
 import { RequestOptions } from '../../internal/request-options';
-import { path } from '../../internal/utils/path';
 
 export class Schedule extends APIResource {
   /**
-   * POST /emails/schedule
+   * Schedule an email to be sent at a future time. Supports natural language
+   * scheduling like "in 1 hour" or "tomorrow at 9am". Compatible with Resend API
+   * format.
+   *
+   * @example
+   * ```ts
+   * const schedule = await client.emails.schedule.create();
+   * ```
    */
-  create(body: ScheduleCreateParams, options?: RequestOptions): APIPromise<ScheduleCreateResponse> {
-    return this._client.post('/api/v2/emails/schedule', { body, ...options });
+  create(
+    body: ScheduleCreateParams | null | undefined = {},
+    options?: RequestOptions,
+  ): APIPromise<ScheduleCreateResponse> {
+    return this._client.post('/v2/emails/schedule', { body, ...options });
   }
 
   /**
-   * GET /emails/schedule/{id}
-   */
-  retrieve(id: string, options?: RequestOptions): APIPromise<ScheduleRetrieveResponse> {
-    return this._client.get(path`/api/v2/emails/schedule/${id}`, options);
-  }
-
-  /**
-   * GET /emails/schedule
+   * Retrieve a list of emails scheduled for future sending. Supports filtering by
+   * status and pagination.
+   *
+   * @example
+   * ```ts
+   * const schedules = await client.emails.schedule.list();
+   * ```
    */
   list(
     query: ScheduleListParams | null | undefined = {},
     options?: RequestOptions,
   ): APIPromise<ScheduleListResponse> {
-    return this._client.get('/api/v2/emails/schedule', { query, ...options });
-  }
-
-  /**
-   * DELETE /emails/schedule/{id}
-   */
-  delete(id: string, options?: RequestOptions): APIPromise<ScheduleDeleteResponse> {
-    return this._client.delete(path`/api/v2/emails/schedule/${id}`, options);
+    return this._client.get('/v2/emails/schedule', { query, ...options });
   }
 }
 
 export interface ScheduleCreateResponse {
-  id: string;
+  id?: string;
 
-  scheduled_at: string;
+  /**
+   * Normalized ISO 8601 timestamp
+   */
+  scheduled_at?: string;
 
-  status: string;
-
-  timezone: string;
-}
-
-/**
- * GET /api/v2/emails/schedule/[id] Get details of a specific scheduled email
- *
- * DELETE /api/v2/emails/schedule/[id] Cancel a scheduled email (only if status is
- * 'scheduled')
- *
- * Has tests? ❌ (TODO) Has logging? ✅ Has types? ✅
- */
-export interface ScheduleRetrieveResponse {
-  id: string;
-
-  attempts: number;
-
-  created_at: string;
-
-  from: string;
-
-  max_attempts: number;
-
-  scheduled_at: string;
-
-  status: string;
-
-  subject: string;
-
-  timezone: string;
-
-  to: string;
-
-  updated_at: string;
-
-  attachments?: Array<string>;
-
-  bcc?: string;
-
-  cc?: string;
-
-  headers?: string;
-
-  html?: string;
-
-  last_error?: string;
-
-  next_retry_at?: string;
-
-  replyTo?: string;
-
-  sent_at?: string;
-
-  sent_email_id?: string;
-
-  tags?: string;
-
-  text?: string;
-}
-
-export interface ScheduleListResponse {
-  data: Array<string>;
-
-  pagination: number;
-}
-
-export interface ScheduleDeleteResponse {
-  id: string;
-
-  cancelled_at: string;
-
-  status: string;
-}
-
-export interface ScheduleCreateParams {
-  from: string;
-
-  scheduled_at: string;
-
-  subject: string;
-
-  to: string;
-
-  attachments?: Array<string>;
-
-  bcc?: string;
-
-  cc?: string;
-
-  headers?: string;
-
-  html?: string;
-
-  reply_to?: string;
-
-  replyTo?: string;
-
-  tags?: string;
-
-  text?: string;
+  status?: 'scheduled';
 
   timezone?: string;
 }
 
-export interface ScheduleListParams {
-  /**
-   * limit parameter
-   */
-  limit?: number;
+export interface ScheduleListResponse {
+  data?: Array<ScheduleListResponse.Data>;
+
+  pagination?: ScheduleListResponse.Pagination;
+}
+
+export namespace ScheduleListResponse {
+  export interface Data {
+    id?: string;
+
+    attempts?: number;
+
+    created_at?: string;
+
+    from?: string;
+
+    last_error?: string;
+
+    scheduled_at?: string;
+
+    status?: string;
+
+    subject?: string;
+
+    timezone?: string;
+
+    to?: Array<string>;
+  }
+
+  export interface Pagination {
+    hasMore?: boolean;
+
+    limit?: number;
+
+    offset?: number;
+
+    total?: number;
+  }
+}
+
+export interface ScheduleCreateParams {
+  attachments?: Array<ScheduleCreateParams.Attachment> | null;
+
+  bcc?: string | Array<string> | null;
+
+  cc?: string | Array<string> | null;
 
   /**
-   * offset parameter
+   * Supports both "email@domain.com" and "Display Name <email@domain.com>" formats
    */
+  from?: string;
+
+  headers?: { [key: string]: string } | null;
+
+  html?: string | null;
+
+  /**
+   * snake_case (legacy)
+   */
+  reply_to?: string | Array<string> | null;
+
+  /**
+   * camelCase (Resend-compatible)
+   */
+  replyTo?: string | Array<string> | null;
+
+  /**
+   * ISO 8601 or natural language ("in 1 hour", "tomorrow at 9am")
+   */
+  scheduled_at?: string;
+
+  subject?: string;
+
+  tags?: Array<ScheduleCreateParams.Tag> | null;
+
+  text?: string | null;
+
+  /**
+   * User's timezone for natural language parsing (defaults to UTC)
+   */
+  timezone?: string | null;
+
+  to?: string | Array<string>;
+}
+
+export namespace ScheduleCreateParams {
+  export interface Attachment {
+    /**
+     * Base64 encoded content
+     */
+    content?: string | null;
+
+    /**
+     * Content ID for embedding (e.g., "logo" for <img src="cid:logo">)
+     */
+    content_id?: string | null;
+
+    /**
+     * snake_case (legacy)
+     */
+    content_type?: string | null;
+
+    /**
+     * camelCase (Resend-compatible)
+     */
+    contentType?: string | null;
+
+    /**
+     * Required display name
+     */
+    filename?: string;
+
+    /**
+     * Remote file URL
+     */
+    path?: string | null;
+  }
+
+  export interface Tag {
+    name?: string;
+
+    value?: string;
+  }
+}
+
+export interface ScheduleListParams {
+  limit?: number;
+
   offset?: number;
 
   /**
-   * status parameter
+   * Filter by status
    */
   status?: string;
 }
@@ -168,9 +191,7 @@ export interface ScheduleListParams {
 export declare namespace Schedule {
   export {
     type ScheduleCreateResponse as ScheduleCreateResponse,
-    type ScheduleRetrieveResponse as ScheduleRetrieveResponse,
     type ScheduleListResponse as ScheduleListResponse,
-    type ScheduleDeleteResponse as ScheduleDeleteResponse,
     type ScheduleCreateParams as ScheduleCreateParams,
     type ScheduleListParams as ScheduleListParams,
   };

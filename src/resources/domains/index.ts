@@ -1,15 +1,24 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-export { Auth, type AuthCreateResponse, type AuthUpdateResponse, type AuthCreateParams } from './auth';
+export {
+  Auth,
+  type AuthInitializeResponse,
+  type AuthVerifyResponse,
+  type AuthInitializeParams,
+  type AuthVerifyParams,
+} from './auth';
 export {
   Domains,
   type DomainCreateResponse,
   type DomainRetrieveResponse,
-  type DomainUpdateResponse,
   type DomainListResponse,
   type DomainDeleteResponse,
-  type DomainListDNSRecordsResponse,
+  type DomainRetrieveDNSRecordsResponse,
+  type DomainUpdateCatchAllResponse,
+  type DomainUpgradeMailFromResponse,
   type DomainCreateParams,
   type DomainRetrieveParams,
   type DomainListParams,
+  type DomainUpdateCatchAllParams,
+  type DomainUpgradeMailFromParams,
 } from './domains';

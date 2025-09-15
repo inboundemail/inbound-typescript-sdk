@@ -2,18 +2,16 @@
 
 export {
   Emails,
-  type EmailCreateResponse,
   type EmailRetrieveResponse,
   type EmailReplyResponse,
-  type EmailCreateParams,
+  type EmailSendResponse,
   type EmailReplyParams,
+  type EmailSendParams,
 } from './emails';
 export {
   Schedule,
   type ScheduleCreateResponse,
-  type ScheduleRetrieveResponse,
   type ScheduleListResponse,
-  type ScheduleDeleteResponse,
   type ScheduleCreateParams,
   type ScheduleListParams,
 } from './schedule';

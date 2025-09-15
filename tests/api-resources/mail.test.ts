@@ -1,6 +1,6 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import Inbound from 'inbnd';
+import Inbound from 'inbound';
 
 const client = new Inbound({
   apiKey: 'My API Key',
@@ -9,32 +9,8 @@ const client = new Inbound({
 
 describe('resource mail', () => {
   // Prism tests are disabled
-  test.skip('create: only required params', async () => {
-    const responsePromise = client.mail.create({ emailId: 'emailId', subject: 'subject', to: 'to' });
-    const rawResponse = await responsePromise.asResponse();
-    expect(rawResponse).toBeInstanceOf(Response);
-    const response = await responsePromise;
-    expect(response).not.toBeInstanceOf(Response);
-    const dataAndResponse = await responsePromise.withResponse();
-    expect(dataAndResponse.data).toBe(response);
-    expect(dataAndResponse.response).toBe(rawResponse);
-  });
-
-  // Prism tests are disabled
-  test.skip('create: required and optional params', async () => {
-    const response = await client.mail.create({
-      emailId: 'emailId',
-      subject: 'subject',
-      to: 'to',
-      attachments: 'attachments',
-      htmlBody: 'htmlBody',
-      textBody: 'textBody',
-    });
-  });
-
-  // Prism tests are disabled
   test.skip('retrieve', async () => {
-    const responsePromise = client.mail.retrieve('id');
+    const responsePromise = client.mail.retrieve('123');
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -46,7 +22,7 @@ describe('resource mail', () => {
 
   // Prism tests are disabled
   test.skip('update', async () => {
-    const responsePromise = client.mail.update('id', {});
+    const responsePromise = client.mail.update('123');
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -54,6 +30,14 @@ describe('resource mail', () => {
     const dataAndResponse = await responsePromise.withResponse();
     expect(dataAndResponse.data).toBe(response);
     expect(dataAndResponse.response).toBe(rawResponse);
+  });
+
+  // Prism tests are disabled
+  test.skip('update: request options and params are passed correctly', async () => {
+    // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
+    await expect(
+      client.mail.update('123', { isArchived: true, isRead: true }, { path: '/_stainless_unknown_path' }),
+    ).rejects.toThrow(Inbound.NotFoundError);
   });
 
   // Prism tests are disabled
@@ -81,7 +65,7 @@ describe('resource mail', () => {
           limit: 0,
           offset: 0,
           search: 'search',
-          status: 'failed',
+          status: 'all',
           timeRange: '24h',
         },
         { path: '/_stainless_unknown_path' },
@@ -90,8 +74,8 @@ describe('resource mail', () => {
   });
 
   // Prism tests are disabled
-  test.skip('bulkCreate: only required params', async () => {
-    const responsePromise = client.mail.bulkCreate({ emailIds: 'emailIds', updates: true });
+  test.skip('bulkUpdate', async () => {
+    const responsePromise = client.mail.bulkUpdate();
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -102,13 +86,19 @@ describe('resource mail', () => {
   });
 
   // Prism tests are disabled
-  test.skip('bulkCreate: required and optional params', async () => {
-    const response = await client.mail.bulkCreate({ emailIds: 'emailIds', updates: true });
+  test.skip('bulkUpdate: request options and params are passed correctly', async () => {
+    // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
+    await expect(
+      client.mail.bulkUpdate(
+        { emailIds: ['string'], updates: { isArchived: true, isRead: true } },
+        { path: '/_stainless_unknown_path' },
+      ),
+    ).rejects.toThrow(Inbound.NotFoundError);
   });
 
   // Prism tests are disabled
-  test.skip('retrieveThread', async () => {
-    const responsePromise = client.mail.retrieveThread('id');
+  test.skip('getThread', async () => {
+    const responsePromise = client.mail.getThread('123');
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -119,8 +109,8 @@ describe('resource mail', () => {
   });
 
   // Prism tests are disabled
-  test.skip('threadCounts', async () => {
-    const responsePromise = client.mail.threadCounts();
+  test.skip('getThreadCounts', async () => {
+    const responsePromise = client.mail.getThreadCounts();
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -128,5 +118,43 @@ describe('resource mail', () => {
     const dataAndResponse = await responsePromise.withResponse();
     expect(dataAndResponse.data).toBe(response);
     expect(dataAndResponse.response).toBe(rawResponse);
+  });
+
+  // Prism tests are disabled
+  test.skip('getThreadCounts: request options and params are passed correctly', async () => {
+    // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
+    await expect(
+      client.mail.getThreadCounts({ emailIds: ['string'] }, { path: '/_stainless_unknown_path' }),
+    ).rejects.toThrow(Inbound.NotFoundError);
+  });
+
+  // Prism tests are disabled
+  test.skip('reply', async () => {
+    const responsePromise = client.mail.reply();
+    const rawResponse = await responsePromise.asResponse();
+    expect(rawResponse).toBeInstanceOf(Response);
+    const response = await responsePromise;
+    expect(response).not.toBeInstanceOf(Response);
+    const dataAndResponse = await responsePromise.withResponse();
+    expect(dataAndResponse.data).toBe(response);
+    expect(dataAndResponse.response).toBe(rawResponse);
+  });
+
+  // Prism tests are disabled
+  test.skip('reply: request options and params are passed correctly', async () => {
+    // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
+    await expect(
+      client.mail.reply(
+        {
+          attachments: [{ content: 'content', contentType: 'contentType', filename: 'filename' }],
+          emailId: 'emailId',
+          htmlBody: 'htmlBody',
+          subject: 'subject',
+          textBody: 'textBody',
+          to: 'to',
+        },
+        { path: '/_stainless_unknown_path' },
+      ),
+    ).rejects.toThrow(Inbound.NotFoundError);
   });
 });

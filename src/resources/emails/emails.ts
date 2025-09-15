@@ -6,10 +6,8 @@ import {
   Schedule,
   ScheduleCreateParams,
   ScheduleCreateResponse,
-  ScheduleDeleteResponse,
   ScheduleListParams,
   ScheduleListResponse,
-  ScheduleRetrieveResponse,
 } from './schedule';
 import { APIPromise } from '../../core/api-promise';
 import { RequestOptions } from '../../internal/request-options';
@@ -19,148 +17,291 @@ export class Emails extends APIResource {
   schedule: ScheduleAPI.Schedule = new ScheduleAPI.Schedule(this._client);
 
   /**
-   * POST /emails
-   */
-  create(body: EmailCreateParams, options?: RequestOptions): APIPromise<EmailCreateResponse> {
-    return this._client.post('/api/v2/emails', { body, ...options });
-  }
-
-  /**
-   * GET /emails/{id}
+   * Retrieve details of a specific sent email by its ID. Compatible with Resend API
+   * format.
+   *
+   * @example
+   * ```ts
+   * const email = await client.emails.retrieve('123');
+   * ```
    */
   retrieve(id: string, options?: RequestOptions): APIPromise<EmailRetrieveResponse> {
-    return this._client.get(path`/api/v2/emails/${id}`, options);
+    return this._client.get(path`/v2/emails/${id}`, options);
   }
 
   /**
-   * POST /emails/{id}/reply
+   * Reply to an inbound email with proper threading support. Supports both simple
+   * mode (faster) and full mode (with attachments and original message quoting).
+   *
+   * @example
+   * ```ts
+   * const response = await client.emails.reply('123');
+   * ```
    */
-  reply(id: string, body: EmailReplyParams, options?: RequestOptions): APIPromise<EmailReplyResponse> {
-    return this._client.post(path`/api/v2/emails/${id}/reply`, { body, ...options });
+  reply(
+    id: string,
+    body: EmailReplyParams | null | undefined = {},
+    options?: RequestOptions,
+  ): APIPromise<EmailReplyResponse> {
+    return this._client.post(path`/v2/emails/${id}/reply`, { body, ...options });
+  }
+
+  /**
+   * Send a single email through the Inbound API. Supports both simple text/HTML
+   * emails and emails with attachments. Compatible with Resend API format for easy
+   * migration.
+   *
+   * @example
+   * ```ts
+   * const response = await client.emails.send();
+   * ```
+   */
+  send(
+    body: EmailSendParams | null | undefined = {},
+    options?: RequestOptions,
+  ): APIPromise<EmailSendResponse> {
+    return this._client.post('/v2/emails', { body, ...options });
   }
 }
 
-export interface EmailCreateResponse {
-  id: string;
-
-  messageId: string;
-}
-
-/**
- * GET /api/v2/emails/{id} Retrieve a single sent email by ID Supports both
- * session-based auth and API key auth Has tests? ❌ Has logging? ✅ Has types? ✅
- */
 export interface EmailRetrieveResponse {
-  id: string;
+  id?: string;
 
-  bcc: string;
+  bcc?: Array<unknown>;
 
-  cc: string;
+  cc?: Array<unknown>;
 
-  created_at: string;
+  created_at?: string;
 
-  from: string;
+  from?: string;
 
-  html: string;
+  html?: string | null;
 
-  last_event: string;
+  last_event?: string;
 
-  object: string;
+  object?: 'email';
 
-  reply_to: string;
-
-  subject: string;
-
-  text: string;
-
-  to: string;
-}
-
-export interface EmailReplyResponse {
-  id: string;
-
-  awsMessageId: string;
-
-  messageId: string;
-}
-
-export interface EmailCreateParams {
-  from: string;
-
-  subject: string;
-
-  to: string;
-
-  attachments?: Array<string>;
-
-  bcc?: string;
-
-  cc?: string;
-
-  headers?: string;
-
-  html?: string;
-
-  reply_to?: string;
-
-  replyTo?: string;
-
-  tags?: string;
-
-  text?: string;
-}
-
-export interface EmailReplyParams {
-  from: string;
-
-  attachments?: Array<string>;
-
-  bcc?: string;
-
-  cc?: string;
-
-  from_name?: string;
-
-  headers?: string;
-
-  html?: string;
-
-  include_original?: boolean;
-
-  includeOriginal?: boolean;
-
-  reply_to?: string;
-
-  replyTo?: string;
-
-  simple?: boolean;
+  reply_to?: Array<unknown>;
 
   subject?: string;
 
-  tags?: string;
+  text?: string | null;
 
-  text?: string;
+  to?: Array<string>;
+}
 
-  to?: string;
+export interface EmailReplyResponse {
+  id?: string;
+
+  /**
+   * AWS SES Message ID
+   */
+  awsMessageId?: string;
+
+  /**
+   * Inbound message ID (used for threading)
+   */
+  messageId?: string;
+}
+
+export interface EmailSendResponse {
+  id?: string;
+
+  /**
+   * AWS SES Message ID
+   */
+  messageId?: string;
+}
+
+export interface EmailReplyParams {
+  attachments?: Array<EmailReplyParams.Attachment> | null;
+
+  bcc?: string | Array<string> | null;
+
+  cc?: string | Array<string> | null;
+
+  from?: string;
+
+  /**
+   * Optional sender name for display
+   */
+  from_name?: string | null;
+
+  headers?: { [key: string]: string } | null;
+
+  html?: string | null;
+
+  /**
+   * snake_case (legacy)
+   */
+  include_original?: boolean | null;
+
+  /**
+   * camelCase (Resend-compatible)
+   */
+  includeOriginal?: boolean | null;
+
+  /**
+   * snake_case (legacy)
+   */
+  reply_to?: string | Array<string> | null;
+
+  /**
+   * camelCase (Resend-compatible)
+   */
+  replyTo?: string | Array<string> | null;
+
+  /**
+   * Use simplified reply mode (faster, lighter)
+   */
+  simple?: boolean | null;
+
+  /**
+   * Optional - will add "Re: " to original subject if not provided
+   */
+  subject?: string | null;
+
+  tags?: Array<EmailReplyParams.Tag> | null;
+
+  text?: string | null;
+
+  /**
+   * Optional - will use original sender if not provided
+   */
+  to?: string | Array<string> | null;
+}
+
+export namespace EmailReplyParams {
+  export interface Attachment {
+    /**
+     * Base64 encoded content
+     */
+    content?: string | null;
+
+    /**
+     * Content ID for embedding (e.g., "logo" for <img src="cid:logo">)
+     */
+    content_id?: string | null;
+
+    /**
+     * snake_case (legacy)
+     */
+    content_type?: string | null;
+
+    /**
+     * camelCase (Resend-compatible)
+     */
+    contentType?: string | null;
+
+    /**
+     * Required display name
+     */
+    filename?: string;
+
+    /**
+     * Remote file URL
+     */
+    path?: string | null;
+  }
+
+  export interface Tag {
+    name?: string;
+
+    value?: string;
+  }
+}
+
+export interface EmailSendParams {
+  attachments?: Array<EmailSendParams.Attachment> | null;
+
+  bcc?: string | Array<string> | null;
+
+  cc?: string | Array<string> | null;
+
+  /**
+   * Now supports both "email@domain.com" and "Display Name <email@domain.com>"
+   * formats
+   */
+  from?: string;
+
+  headers?: { [key: string]: string } | null;
+
+  html?: string | null;
+
+  /**
+   * snake_case (legacy)
+   */
+  reply_to?: string | Array<string> | null;
+
+  /**
+   * camelCase (Resend-compatible)
+   */
+  replyTo?: string | Array<string> | null;
+
+  subject?: string;
+
+  tags?: Array<EmailSendParams.Tag> | null;
+
+  text?: string | null;
+
+  to?: string | Array<string>;
+}
+
+export namespace EmailSendParams {
+  export interface Attachment {
+    /**
+     * Base64 encoded content
+     */
+    content?: string | null;
+
+    /**
+     * Content ID for embedding (e.g., "logo" for <img src="cid:logo">)
+     */
+    content_id?: string | null;
+
+    /**
+     * snake_case (legacy)
+     */
+    content_type?: string | null;
+
+    /**
+     * camelCase (Resend-compatible)
+     */
+    contentType?: string | null;
+
+    /**
+     * Required display name
+     */
+    filename?: string;
+
+    /**
+     * Remote file URL
+     */
+    path?: string | null;
+  }
+
+  export interface Tag {
+    name?: string;
+
+    value?: string;
+  }
 }
 
 Emails.Schedule = Schedule;
 
 export declare namespace Emails {
   export {
-    type EmailCreateResponse as EmailCreateResponse,
     type EmailRetrieveResponse as EmailRetrieveResponse,
     type EmailReplyResponse as EmailReplyResponse,
-    type EmailCreateParams as EmailCreateParams,
+    type EmailSendResponse as EmailSendResponse,
     type EmailReplyParams as EmailReplyParams,
+    type EmailSendParams as EmailSendParams,
   };
 
   export {
     Schedule as Schedule,
     type ScheduleCreateResponse as ScheduleCreateResponse,
-    type ScheduleRetrieveResponse as ScheduleRetrieveResponse,
     type ScheduleListResponse as ScheduleListResponse,
-    type ScheduleDeleteResponse as ScheduleDeleteResponse,
     type ScheduleCreateParams as ScheduleCreateParams,
     type ScheduleListParams as ScheduleListParams,
   };

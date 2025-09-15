@@ -1,6 +1,6 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import Inbound from 'inbnd';
+import Inbound from 'inbound';
 
 const client = new Inbound({
   apiKey: 'My API Key',
@@ -9,8 +9,8 @@ const client = new Inbound({
 
 describe('resource auth', () => {
   // Prism tests are disabled
-  test.skip('create', async () => {
-    const responsePromise = client.domains.auth.create('id', {});
+  test.skip('initialize', async () => {
+    const responsePromise = client.domains.auth.initialize('123');
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -21,8 +21,20 @@ describe('resource auth', () => {
   });
 
   // Prism tests are disabled
-  test.skip('update', async () => {
-    const responsePromise = client.domains.auth.update('id');
+  test.skip('initialize: request options and params are passed correctly', async () => {
+    // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
+    await expect(
+      client.domains.auth.initialize(
+        '123',
+        { generateDmarc: true, generateSpf: true, mailFromDomain: 'mailFromDomain' },
+        { path: '/_stainless_unknown_path' },
+      ),
+    ).rejects.toThrow(Inbound.NotFoundError);
+  });
+
+  // Prism tests are disabled
+  test.skip('verify', async () => {
+    const responsePromise = client.domains.auth.verify('123');
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -30,5 +42,13 @@ describe('resource auth', () => {
     const dataAndResponse = await responsePromise.withResponse();
     expect(dataAndResponse.data).toBe(response);
     expect(dataAndResponse.response).toBe(rawResponse);
+  });
+
+  // Prism tests are disabled
+  test.skip('verify: request options and params are passed correctly', async () => {
+    // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
+    await expect(
+      client.domains.auth.verify('123', { body: {} }, { path: '/_stainless_unknown_path' }),
+    ).rejects.toThrow(Inbound.NotFoundError);
   });
 });

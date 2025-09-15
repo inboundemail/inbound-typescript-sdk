@@ -33,7 +33,6 @@ import {
   EndpointDeleteResponse,
   EndpointListParams,
   EndpointListResponse,
-  EndpointRetrieveParams,
   EndpointRetrieveResponse,
   EndpointTestParams,
   EndpointTestResponse,
@@ -43,36 +42,48 @@ import {
 } from './resources/endpoints';
 import {
   Mail,
-  MailBulkCreateParams,
-  MailBulkCreateResponse,
-  MailCreateParams,
-  MailCreateResponse,
+  MailBulkUpdateParams,
+  MailBulkUpdateResponse,
+  MailGetThreadCountsParams,
+  MailGetThreadCountsResponse,
+  MailGetThreadResponse,
   MailListParams,
   MailListResponse,
+  MailReplyParams,
+  MailReplyResponse,
   MailRetrieveResponse,
-  MailRetrieveThreadResponse,
-  MailThreadCountsResponse,
   MailUpdateParams,
   MailUpdateResponse,
 } from './resources/mail';
 import {
+  Onboarding,
+  OnboardingCheckReplyResponse,
+  OnboardingHandleWebhookParams,
+  OnboardingHandleWebhookResponse,
+  OnboardingSendDemoParams,
+  OnboardingSendDemoResponse,
+} from './resources/onboarding';
+import {
   DomainCreateParams,
   DomainCreateResponse,
   DomainDeleteResponse,
-  DomainListDNSRecordsResponse,
   DomainListParams,
   DomainListResponse,
+  DomainRetrieveDNSRecordsResponse,
   DomainRetrieveParams,
   DomainRetrieveResponse,
-  DomainUpdateResponse,
+  DomainUpdateCatchAllParams,
+  DomainUpdateCatchAllResponse,
+  DomainUpgradeMailFromParams,
+  DomainUpgradeMailFromResponse,
   Domains,
 } from './resources/domains/domains';
 import {
-  EmailCreateParams,
-  EmailCreateResponse,
   EmailReplyParams,
   EmailReplyResponse,
   EmailRetrieveResponse,
+  EmailSendParams,
+  EmailSendResponse,
   Emails,
 } from './resources/emails/emails';
 import { type Fetch } from './internal/builtin-types';
@@ -89,23 +100,28 @@ import {
 import { isEmptyObj } from './internal/utils/values';
 
 const environments = {
-  production: 'https://inbound.new',
-  environment_1: 'http://localhost:3000',
+  production: 'https://inbound.new/api/v2',
+  environment_1: 'http://localhost:3000/api/v2',
 };
 type Environment = keyof typeof environments;
 
 export interface ClientOptions {
   /**
-   * Defaults to process.env['INBOUND_API_KEY'].
+   * API Key authentication. Use 'Bearer YOUR_API_KEY'
    */
   apiKey?: string | null | undefined;
+
+  /**
+   * JWT token for session-based authentication
+   */
+  bearerToken?: string | null | undefined;
 
   /**
    * Specifies the environment to use for the API.
    *
    * Each environment maps to a different base URL:
-   * - `production` corresponds to `https://inbound.new`
-   * - `environment_1` corresponds to `http://localhost:3000`
+   * - `production` corresponds to `https://inbound.new/api/v2`
+   * - `environment_1` corresponds to `http://localhost:3000/api/v2`
    */
   environment?: Environment | undefined;
 
@@ -183,6 +199,7 @@ export interface ClientOptions {
  */
 export class Inbound {
   apiKey: string | null;
+  bearerToken: string | null;
 
   baseURL: string;
   maxRetries: number;
@@ -200,8 +217,9 @@ export class Inbound {
    * API Client for interfacing with the Inbound API.
    *
    * @param {string | null | undefined} [opts.apiKey=process.env['INBOUND_API_KEY'] ?? null]
+   * @param {string | null | undefined} [opts.bearerToken=process.env['INBOUND_BEARER_TOKEN'] ?? null]
    * @param {Environment} [opts.environment=production] - Specifies the environment URL to use for the API.
-   * @param {string} [opts.baseURL=process.env['INBOUND_BASE_URL'] ?? https://inbound.new] - Override the default base URL for the API.
+   * @param {string} [opts.baseURL=process.env['INBOUND_BASE_URL'] ?? https://inbound.new/api/v2] - Override the default base URL for the API.
    * @param {number} [opts.timeout=1 minute] - The maximum amount of time (in milliseconds) the client will wait for a response before timing out.
    * @param {MergedRequestInit} [opts.fetchOptions] - Additional `RequestInit` options to be passed to `fetch` calls.
    * @param {Fetch} [opts.fetch] - Specify a custom `fetch` function implementation.
@@ -212,10 +230,12 @@ export class Inbound {
   constructor({
     baseURL = readEnv('INBOUND_BASE_URL'),
     apiKey = readEnv('INBOUND_API_KEY') ?? null,
+    bearerToken = readEnv('INBOUND_BEARER_TOKEN') ?? null,
     ...opts
   }: ClientOptions = {}) {
     const options: ClientOptions = {
       apiKey,
+      bearerToken,
       ...opts,
       baseURL,
       environment: opts.environment ?? 'production',
@@ -245,6 +265,7 @@ export class Inbound {
     this._options = options;
 
     this.apiKey = apiKey;
+    this.bearerToken = bearerToken;
   }
 
   /**
@@ -262,6 +283,7 @@ export class Inbound {
       fetch: this.fetch,
       fetchOptions: this.fetchOptions,
       apiKey: this.apiKey,
+      bearerToken: this.bearerToken,
       ...options,
     });
     return client;
@@ -286,16 +308,34 @@ export class Inbound {
       return;
     }
 
+    if (this.bearerToken && values.get('authorization')) {
+      return;
+    }
+    if (nulls.has('authorization')) {
+      return;
+    }
+
     throw new Error(
-      'Could not resolve authentication method. Expected the apiKey to be set. Or for the "Authorization" headers to be explicitly omitted',
+      'Could not resolve authentication method. Expected either apiKey or bearerToken to be set. Or for one of the "Authorization" or "Authorization" headers to be explicitly omitted',
     );
   }
 
   protected async authHeaders(opts: FinalRequestOptions): Promise<NullableHeaders | undefined> {
+    return buildHeaders([await this.apiKeyAuth(opts), await this.bearerAuth(opts)]);
+  }
+
+  protected async apiKeyAuth(opts: FinalRequestOptions): Promise<NullableHeaders | undefined> {
     if (this.apiKey == null) {
       return undefined;
     }
     return buildHeaders([{ Authorization: this.apiKey }]);
+  }
+
+  protected async bearerAuth(opts: FinalRequestOptions): Promise<NullableHeaders | undefined> {
+    if (this.bearerToken == null) {
+      return undefined;
+    }
+    return buildHeaders([{ Authorization: `Bearer ${this.bearerToken}` }]);
   }
 
   /**
@@ -807,6 +847,7 @@ export class Inbound {
   emails: API.Emails = new API.Emails(this);
   endpoints: API.Endpoints = new API.Endpoints(this);
   mail: API.Mail = new API.Mail(this);
+  onboarding: API.Onboarding = new API.Onboarding(this);
 }
 
 Inbound.Domains = Domains;
@@ -814,6 +855,7 @@ Inbound.EmailAddresses = EmailAddresses;
 Inbound.Emails = Emails;
 Inbound.Endpoints = Endpoints;
 Inbound.Mail = Mail;
+Inbound.Onboarding = Onboarding;
 
 export declare namespace Inbound {
   export type RequestOptions = Opts.RequestOptions;
@@ -822,13 +864,16 @@ export declare namespace Inbound {
     Domains as Domains,
     type DomainCreateResponse as DomainCreateResponse,
     type DomainRetrieveResponse as DomainRetrieveResponse,
-    type DomainUpdateResponse as DomainUpdateResponse,
     type DomainListResponse as DomainListResponse,
     type DomainDeleteResponse as DomainDeleteResponse,
-    type DomainListDNSRecordsResponse as DomainListDNSRecordsResponse,
+    type DomainRetrieveDNSRecordsResponse as DomainRetrieveDNSRecordsResponse,
+    type DomainUpdateCatchAllResponse as DomainUpdateCatchAllResponse,
+    type DomainUpgradeMailFromResponse as DomainUpgradeMailFromResponse,
     type DomainCreateParams as DomainCreateParams,
     type DomainRetrieveParams as DomainRetrieveParams,
     type DomainListParams as DomainListParams,
+    type DomainUpdateCatchAllParams as DomainUpdateCatchAllParams,
+    type DomainUpgradeMailFromParams as DomainUpgradeMailFromParams,
   };
 
   export {
@@ -845,11 +890,11 @@ export declare namespace Inbound {
 
   export {
     Emails as Emails,
-    type EmailCreateResponse as EmailCreateResponse,
     type EmailRetrieveResponse as EmailRetrieveResponse,
     type EmailReplyResponse as EmailReplyResponse,
-    type EmailCreateParams as EmailCreateParams,
+    type EmailSendResponse as EmailSendResponse,
     type EmailReplyParams as EmailReplyParams,
+    type EmailSendParams as EmailSendParams,
   };
 
   export {
@@ -861,7 +906,6 @@ export declare namespace Inbound {
     type EndpointDeleteResponse as EndpointDeleteResponse,
     type EndpointTestResponse as EndpointTestResponse,
     type EndpointCreateParams as EndpointCreateParams,
-    type EndpointRetrieveParams as EndpointRetrieveParams,
     type EndpointUpdateParams as EndpointUpdateParams,
     type EndpointListParams as EndpointListParams,
     type EndpointTestParams as EndpointTestParams,
@@ -869,16 +913,26 @@ export declare namespace Inbound {
 
   export {
     Mail as Mail,
-    type MailCreateResponse as MailCreateResponse,
     type MailRetrieveResponse as MailRetrieveResponse,
     type MailUpdateResponse as MailUpdateResponse,
     type MailListResponse as MailListResponse,
-    type MailBulkCreateResponse as MailBulkCreateResponse,
-    type MailRetrieveThreadResponse as MailRetrieveThreadResponse,
-    type MailThreadCountsResponse as MailThreadCountsResponse,
-    type MailCreateParams as MailCreateParams,
+    type MailBulkUpdateResponse as MailBulkUpdateResponse,
+    type MailGetThreadResponse as MailGetThreadResponse,
+    type MailGetThreadCountsResponse as MailGetThreadCountsResponse,
+    type MailReplyResponse as MailReplyResponse,
     type MailUpdateParams as MailUpdateParams,
     type MailListParams as MailListParams,
-    type MailBulkCreateParams as MailBulkCreateParams,
+    type MailBulkUpdateParams as MailBulkUpdateParams,
+    type MailGetThreadCountsParams as MailGetThreadCountsParams,
+    type MailReplyParams as MailReplyParams,
+  };
+
+  export {
+    Onboarding as Onboarding,
+    type OnboardingCheckReplyResponse as OnboardingCheckReplyResponse,
+    type OnboardingHandleWebhookResponse as OnboardingHandleWebhookResponse,
+    type OnboardingSendDemoResponse as OnboardingSendDemoResponse,
+    type OnboardingHandleWebhookParams as OnboardingHandleWebhookParams,
+    type OnboardingSendDemoParams as OnboardingSendDemoParams,
   };
 }

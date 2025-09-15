@@ -1,6 +1,6 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import Inbound from 'inbnd';
+import Inbound from 'inbound';
 
 const client = new Inbound({
   apiKey: 'My API Key',
@@ -9,8 +9,8 @@ const client = new Inbound({
 
 describe('resource endpoints', () => {
   // Prism tests are disabled
-  test.skip('create: only required params', async () => {
-    const responsePromise = client.endpoints.create({ config: 'config', name: 'name', type: 'webhook' });
+  test.skip('create', async () => {
+    const responsePromise = client.endpoints.create();
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -21,18 +21,19 @@ describe('resource endpoints', () => {
   });
 
   // Prism tests are disabled
-  test.skip('create: required and optional params', async () => {
-    const response = await client.endpoints.create({
-      config: 'config',
-      name: 'name',
-      type: 'webhook',
-      description: 'description',
-    });
+  test.skip('create: request options and params are passed correctly', async () => {
+    // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
+    await expect(
+      client.endpoints.create(
+        { config: {}, description: 'description', name: 'name', type: 'webhook' },
+        { path: '/_stainless_unknown_path' },
+      ),
+    ).rejects.toThrow(Inbound.NotFoundError);
   });
 
   // Prism tests are disabled
-  test.skip('retrieve: only required params', async () => {
-    const responsePromise = client.endpoints.retrieve('id', { query_id: 'id' });
+  test.skip('retrieve', async () => {
+    const responsePromise = client.endpoints.retrieve('123');
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -43,13 +44,8 @@ describe('resource endpoints', () => {
   });
 
   // Prism tests are disabled
-  test.skip('retrieve: required and optional params', async () => {
-    const response = await client.endpoints.retrieve('id', { query_id: 'id' });
-  });
-
-  // Prism tests are disabled
-  test.skip('update: only required params', async () => {
-    const responsePromise = client.endpoints.update('id', { body_id: 'id' });
+  test.skip('update', async () => {
+    const responsePromise = client.endpoints.update('123');
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -60,15 +56,15 @@ describe('resource endpoints', () => {
   });
 
   // Prism tests are disabled
-  test.skip('update: required and optional params', async () => {
-    const response = await client.endpoints.update('id', {
-      body_id: 'id',
-      config:
-        'import(/Users/ryanvogel/dev/inbound-org/inbound/features/endpoints/types/index).EndpointConfig',
-      description: 'description',
-      isActive: true,
-      name: 'name',
-    });
+  test.skip('update: request options and params are passed correctly', async () => {
+    // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
+    await expect(
+      client.endpoints.update(
+        '123',
+        { body_id: 'id', config: {}, description: 'description', isActive: true, name: 'name' },
+        { path: '/_stainless_unknown_path' },
+      ),
+    ).rejects.toThrow(Inbound.NotFoundError);
   });
 
   // Prism tests are disabled
@@ -96,7 +92,7 @@ describe('resource endpoints', () => {
 
   // Prism tests are disabled
   test.skip('delete', async () => {
-    const responsePromise = client.endpoints.delete('id');
+    const responsePromise = client.endpoints.delete('123');
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -107,8 +103,8 @@ describe('resource endpoints', () => {
   });
 
   // Prism tests are disabled
-  test.skip('test: only required params', async () => {
-    const responsePromise = client.endpoints.test('id', { body_id: 'id' });
+  test.skip('test', async () => {
+    const responsePromise = client.endpoints.test('123');
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -119,7 +115,14 @@ describe('resource endpoints', () => {
   });
 
   // Prism tests are disabled
-  test.skip('test: required and optional params', async () => {
-    const response = await client.endpoints.test('id', { body_id: 'id', webhookFormat: 'inbound' });
+  test.skip('test: request options and params are passed correctly', async () => {
+    // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
+    await expect(
+      client.endpoints.test(
+        '123',
+        { body_id: 'id', webhookFormat: 'inbound' },
+        { path: '/_stainless_unknown_path' },
+      ),
+    ).rejects.toThrow(Inbound.NotFoundError);
   });
 });

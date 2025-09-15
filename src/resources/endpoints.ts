@@ -7,227 +7,375 @@ import { path } from '../internal/utils/path';
 
 export class Endpoints extends APIResource {
   /**
-   * POST /endpoints
+   * Create a new webhook, email forward, or email group endpoint for processing
+   * incoming emails.
+   *
+   * @example
+   * ```ts
+   * const endpoint = await client.endpoints.create();
+   * ```
    */
-  create(body: EndpointCreateParams, options?: RequestOptions): APIPromise<EndpointCreateResponse> {
-    return this._client.post('/api/v2/endpoints', { body, ...options });
-  }
-
-  /**
-   * GET /endpoints/{id}
-   */
-  retrieve(
-    pathID: string,
-    query: EndpointRetrieveParams,
+  create(
+    body: EndpointCreateParams | null | undefined = {},
     options?: RequestOptions,
-  ): APIPromise<EndpointRetrieveResponse> {
-    return this._client.get(path`/api/v2/endpoints/${pathID}`, { query, ...options });
+  ): APIPromise<EndpointCreateResponse> {
+    return this._client.post('/v2/endpoints', { body, ...options });
   }
 
   /**
-   * PUT /endpoints/{id}
+   * Get detailed information about a specific endpoint including delivery
+   * statistics, recent deliveries, and associated resources.
+   *
+   * @example
+   * ```ts
+   * const endpoint = await client.endpoints.retrieve('123');
+   * ```
+   */
+  retrieve(id: string, options?: RequestOptions): APIPromise<EndpointRetrieveResponse> {
+    return this._client.get(path`/v2/endpoints/${id}`, options);
+  }
+
+  /**
+   * Update an existing endpoint's configuration, status, or properties. For email
+   * groups, this will recreate the group members.
+   *
+   * @example
+   * ```ts
+   * const endpoint = await client.endpoints.update('123');
+   * ```
    */
   update(
     pathID: string,
-    body: EndpointUpdateParams,
+    body: EndpointUpdateParams | null | undefined = {},
     options?: RequestOptions,
   ): APIPromise<EndpointUpdateResponse> {
-    return this._client.put(path`/api/v2/endpoints/${pathID}`, { body, ...options });
+    return this._client.put(path`/v2/endpoints/${pathID}`, { body, ...options });
   }
 
   /**
-   * GET /endpoints
+   * Retrieve all endpoints for the authenticated user with filtering, sorting, and
+   * pagination options.
+   *
+   * @example
+   * ```ts
+   * const endpoints = await client.endpoints.list();
+   * ```
    */
   list(
     query: EndpointListParams | null | undefined = {},
     options?: RequestOptions,
   ): APIPromise<EndpointListResponse> {
-    return this._client.get('/api/v2/endpoints', { query, ...options });
+    return this._client.get('/v2/endpoints', { query, ...options });
   }
 
   /**
-   * DELETE /endpoints/{id}
+   * Permanently delete an endpoint and handle cleanup of associated resources (email
+   * addresses, domains, delivery history).
+   *
+   * @example
+   * ```ts
+   * const endpoint = await client.endpoints.delete('123');
+   * ```
    */
   delete(id: string, options?: RequestOptions): APIPromise<EndpointDeleteResponse> {
-    return this._client.delete(path`/api/v2/endpoints/${id}`, options);
+    return this._client.delete(path`/v2/endpoints/${id}`, options);
   }
 
   /**
-   * POST /endpoints/{id}/test
+   * Send a test payload to an endpoint to verify it's working correctly. Supports
+   * different webhook formats and provides detailed response information.
+   *
+   * @example
+   * ```ts
+   * const response = await client.endpoints.test('123');
+   * ```
    */
-  test(pathID: string, body: EndpointTestParams, options?: RequestOptions): APIPromise<EndpointTestResponse> {
-    return this._client.post(path`/api/v2/endpoints/${pathID}/test`, { body, ...options });
+  test(
+    pathID: string,
+    body: EndpointTestParams | null | undefined = {},
+    options?: RequestOptions,
+  ): APIPromise<EndpointTestResponse> {
+    return this._client.post(path`/v2/endpoints/${pathID}/test`, { body, ...options });
   }
 }
 
 export interface EndpointCreateResponse {
-  id: string;
+  id?: string;
 
-  config: string;
+  config?: unknown;
 
-  createdAt: string;
+  createdAt?: string;
 
-  deliveryStats: string;
+  deliveryStats?: EndpointCreateResponse.DeliveryStats;
 
-  description: string;
+  description?: string | null;
 
-  groupEmails: string;
-
-  isActive: boolean;
-
-  name: string;
-
-  type: 'webhook' | 'email' | 'email_group';
-
-  updatedAt: string;
-
-  userId: string;
-}
-
-export interface EndpointRetrieveResponse {
-  id: string;
-
-  associatedEmails: Array<string>;
-
-  catchAllDomains: Array<string>;
-
-  config: string;
-
-  createdAt: string;
-
-  deliveryStats: string;
-
-  description: string;
-
-  groupEmails: string;
-
-  isActive: boolean;
-
-  name: string;
-
-  recentDeliveries: Array<string>;
-
-  type: 'webhook' | 'email' | 'email_group';
-
-  updatedAt: string;
-
-  userId: string;
-}
-
-export interface EndpointUpdateResponse {
-  id: string;
-
-  config: string;
-
-  createdAt: string;
-
-  description: string;
-
-  groupEmails: string;
-
-  isActive: boolean;
-
-  name: string;
-
-  type: 'webhook' | 'email' | 'email_group';
-
-  updatedAt: string;
-
-  userId: string;
-}
-
-export interface EndpointListResponse {
-  data: Array<string>;
-
-  pagination: number;
-}
-
-export interface EndpointDeleteResponse {
-  cleanup: string;
-
-  message: string;
-}
-
-export interface EndpointTestResponse {
-  message: string;
-
-  responseTime: number;
-
-  success: boolean;
-
-  error?: string;
-
-  responseBody?: string;
-
-  statusCode?: number;
-
-  testPayload?: string;
-
-  webhookFormat?: 'inbound' | 'discord' | 'slack' | 'undefined';
-}
-
-export interface EndpointCreateParams {
-  config: string;
-
-  name: string;
-
-  type: 'webhook' | 'email' | 'email_group';
-
-  description?: string;
-}
-
-export interface EndpointRetrieveParams {
-  /**
-   * id parameter
-   */
-  query_id: string;
-}
-
-export interface EndpointUpdateParams {
-  body_id: string;
-
-  config?:
-    | 'import(/Users/ryanvogel/dev/inbound-org/inbound/features/endpoints/types/index).EndpointConfig'
-    | 'undefined';
-
-  description?: string;
+  groupEmails?: Array<string> | null;
 
   isActive?: boolean;
 
   name?: string;
+
+  type?: 'webhook' | 'email' | 'email_group';
+
+  updatedAt?: string;
+
+  userId?: string;
+}
+
+export namespace EndpointCreateResponse {
+  export interface DeliveryStats {
+    failed?: number;
+
+    lastDelivery?: string | null;
+
+    successful?: number;
+
+    total?: number;
+  }
+}
+
+export interface EndpointRetrieveResponse {
+  id?: string;
+
+  associatedEmails?: Array<EndpointRetrieveResponse.AssociatedEmail>;
+
+  catchAllDomains?: Array<EndpointRetrieveResponse.CatchAllDomain>;
+
+  config?: unknown;
+
+  createdAt?: string | null;
+
+  deliveryStats?: EndpointRetrieveResponse.DeliveryStats;
+
+  description?: string | null;
+
+  groupEmails?: Array<string> | null;
+
+  isActive?: boolean;
+
+  name?: string;
+
+  recentDeliveries?: Array<EndpointRetrieveResponse.RecentDelivery>;
+
+  type?: 'webhook' | 'email' | 'email_group';
+
+  updatedAt?: string | null;
+
+  userId?: string;
+}
+
+export namespace EndpointRetrieveResponse {
+  export interface AssociatedEmail {
+    id?: string;
+
+    address?: string;
+
+    createdAt?: string | null;
+
+    isActive?: boolean;
+  }
+
+  export interface CatchAllDomain {
+    id?: string;
+
+    domain?: string;
+
+    status?: string;
+  }
+
+  export interface DeliveryStats {
+    failed?: number;
+
+    lastDelivery?: string | null;
+
+    successful?: number;
+
+    total?: number;
+  }
+
+  export interface RecentDelivery {
+    id?: string;
+
+    attempts?: number;
+
+    createdAt?: string | null;
+
+    deliveryType?: string;
+
+    emailId?: string;
+
+    lastAttemptAt?: string | null;
+
+    responseData?: unknown;
+
+    status?: string;
+  }
+}
+
+export interface EndpointUpdateResponse {
+  id?: string;
+
+  config?: unknown;
+
+  createdAt?: string | null;
+
+  description?: string | null;
+
+  groupEmails?: Array<string> | null;
+
+  isActive?: boolean;
+
+  name?: string;
+
+  type?: 'webhook' | 'email' | 'email_group';
+
+  updatedAt?: string | null;
+
+  userId?: string;
+}
+
+export interface EndpointListResponse {
+  data?: Array<EndpointListResponse.Data>;
+
+  pagination?: EndpointListResponse.Pagination;
+}
+
+export namespace EndpointListResponse {
+  export interface Data {
+    id?: string;
+
+    config?: unknown;
+
+    createdAt?: string;
+
+    deliveryStats?: Data.DeliveryStats;
+
+    description?: string | null;
+
+    groupEmails?: Array<string> | null;
+
+    isActive?: boolean;
+
+    name?: string;
+
+    type?: 'webhook' | 'email' | 'email_group';
+
+    updatedAt?: string;
+
+    userId?: string;
+  }
+
+  export namespace Data {
+    export interface DeliveryStats {
+      failed?: number;
+
+      lastDelivery?: string | null;
+
+      successful?: number;
+
+      total?: number;
+    }
+  }
+
+  export interface Pagination {
+    hasMore?: boolean;
+
+    limit?: number;
+
+    offset?: number;
+
+    total?: number;
+  }
+}
+
+export interface EndpointDeleteResponse {
+  cleanup?: EndpointDeleteResponse.Cleanup;
+
+  message?: string;
+}
+
+export namespace EndpointDeleteResponse {
+  export interface Cleanup {
+    deliveriesDeleted?: number;
+
+    domains?: Array<string>;
+
+    domainsUpdated?: number;
+
+    emailAddresses?: Array<string>;
+
+    emailAddressesUpdated?: number;
+
+    groupEmailsDeleted?: number;
+  }
+}
+
+export interface EndpointTestResponse {
+  error?: string;
+
+  message?: string;
+
+  responseBody?: string;
+
+  responseTime?: number;
+
+  statusCode?: number;
+
+  success?: boolean;
+
+  testPayload?: unknown;
+
+  webhookFormat?: 'inbound' | 'discord' | 'slack';
+}
+
+export interface EndpointCreateParams {
+  config?: unknown;
+
+  description?: string | null;
+
+  name?: string;
+
+  type?: 'webhook' | 'email' | 'email_group';
+}
+
+export interface EndpointUpdateParams {
+  /**
+   * from params
+   */
+  body_id?: string;
+
+  config?: unknown;
+
+  description?: string | null;
+
+  isActive?: boolean | null;
+
+  name?: string | null;
 }
 
 export interface EndpointListParams {
-  /**
-   * active parameter
-   */
-  active?: 'true' | 'false' | 'undefined';
+  active?: 'true' | 'false';
 
-  /**
-   * limit parameter
-   */
   limit?: number;
 
-  /**
-   * offset parameter
-   */
   offset?: number;
 
-  /**
-   * sortBy parameter
-   */
-  sortBy?: 'newest' | 'oldest' | 'undefined';
+  sortBy?: 'newest' | 'oldest';
 
-  /**
-   * type parameter
-   */
-  type?: 'webhook' | 'email' | 'email_group' | 'undefined';
+  type?: 'webhook' | 'email' | 'email_group';
 }
 
 export interface EndpointTestParams {
-  body_id: string;
+  /**
+   * from params
+   */
+  body_id?: string;
 
-  webhookFormat?: 'inbound' | 'discord' | 'slack' | 'undefined';
+  /**
+   * optional, defaults to 'inbound'
+   */
+  webhookFormat?: 'inbound' | 'discord' | 'slack' | null;
 }
 
 export declare namespace Endpoints {
@@ -239,7 +387,6 @@ export declare namespace Endpoints {
     type EndpointDeleteResponse as EndpointDeleteResponse,
     type EndpointTestResponse as EndpointTestResponse,
     type EndpointCreateParams as EndpointCreateParams,
-    type EndpointRetrieveParams as EndpointRetrieveParams,
     type EndpointUpdateParams as EndpointUpdateParams,
     type EndpointListParams as EndpointListParams,
     type EndpointTestParams as EndpointTestParams,

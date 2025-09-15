@@ -4,13 +4,16 @@ export {
   Domains,
   type DomainCreateResponse,
   type DomainRetrieveResponse,
-  type DomainUpdateResponse,
   type DomainListResponse,
   type DomainDeleteResponse,
-  type DomainListDNSRecordsResponse,
+  type DomainRetrieveDNSRecordsResponse,
+  type DomainUpdateCatchAllResponse,
+  type DomainUpgradeMailFromResponse,
   type DomainCreateParams,
   type DomainRetrieveParams,
   type DomainListParams,
+  type DomainUpdateCatchAllParams,
+  type DomainUpgradeMailFromParams,
 } from './domains/domains';
 export {
   EmailAddresses,
@@ -25,11 +28,11 @@ export {
 } from './email-addresses';
 export {
   Emails,
-  type EmailCreateResponse,
   type EmailRetrieveResponse,
   type EmailReplyResponse,
-  type EmailCreateParams,
+  type EmailSendResponse,
   type EmailReplyParams,
+  type EmailSendParams,
 } from './emails/emails';
 export {
   Endpoints,
@@ -40,22 +43,30 @@ export {
   type EndpointDeleteResponse,
   type EndpointTestResponse,
   type EndpointCreateParams,
-  type EndpointRetrieveParams,
   type EndpointUpdateParams,
   type EndpointListParams,
   type EndpointTestParams,
 } from './endpoints';
 export {
   Mail,
-  type MailCreateResponse,
   type MailRetrieveResponse,
   type MailUpdateResponse,
   type MailListResponse,
-  type MailBulkCreateResponse,
-  type MailRetrieveThreadResponse,
-  type MailThreadCountsResponse,
-  type MailCreateParams,
+  type MailBulkUpdateResponse,
+  type MailGetThreadResponse,
+  type MailGetThreadCountsResponse,
+  type MailReplyResponse,
   type MailUpdateParams,
   type MailListParams,
-  type MailBulkCreateParams,
+  type MailBulkUpdateParams,
+  type MailGetThreadCountsParams,
+  type MailReplyParams,
 } from './mail';
+export {
+  Onboarding,
+  type OnboardingCheckReplyResponse,
+  type OnboardingHandleWebhookResponse,
+  type OnboardingSendDemoResponse,
+  type OnboardingHandleWebhookParams,
+  type OnboardingSendDemoParams,
+} from './onboarding';

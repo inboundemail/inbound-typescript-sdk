@@ -1,10 +1,10 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { APIPromise } from 'inbnd/core/api-promise';
+import { APIPromise } from 'inbound/core/api-promise';
 
 import util from 'node:util';
-import Inbound from 'inbnd';
-import { APIUserAbortError } from 'inbnd';
+import Inbound from 'inbound';
+import { APIUserAbortError } from 'inbound';
 const defaultFetch = fetch;
 
 describe('instantiate client', () => {
@@ -302,13 +302,13 @@ describe('instantiate client', () => {
     test('empty env variable', () => {
       process.env['INBOUND_BASE_URL'] = ''; // empty
       const client = new Inbound({ apiKey: 'My API Key' });
-      expect(client.baseURL).toEqual('https://inbound.new');
+      expect(client.baseURL).toEqual('https://inbound.new/api/v2');
     });
 
     test('blank env variable', () => {
       process.env['INBOUND_BASE_URL'] = '  '; // blank
       const client = new Inbound({ apiKey: 'My API Key' });
-      expect(client.baseURL).toEqual('https://inbound.new');
+      expect(client.baseURL).toEqual('https://inbound.new/api/v2');
     });
 
     test('env variable with environment', () => {
@@ -321,7 +321,7 @@ describe('instantiate client', () => {
       );
 
       const client = new Inbound({ apiKey: 'My API Key', baseURL: null, environment: 'production' });
-      expect(client.baseURL).toEqual('https://inbound.new');
+      expect(client.baseURL).toEqual('https://inbound.new/api/v2');
     });
 
     test('in request options', () => {
