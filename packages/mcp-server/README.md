@@ -172,7 +172,7 @@ http://localhost:3000?client=cursor&capability=tool-name-length%3D40
 import { server, endpoints, init } from "inbnd-mcp/server";
 
 // import a specific tool
-import createV2Domains from "inbnd-mcp/tools/v2/domains/create-v2-domains";
+import createDomains from "inbnd-mcp/tools/domains/create-domains";
 
 // initialize the server and all endpoints
 init({ server, endpoints });
@@ -197,69 +197,63 @@ const myCustomEndpoint = {
 };
 
 // initialize the server with your custom endpoints
-init({ server: myServer, endpoints: [createV2Domains, myCustomEndpoint] });
+init({ server: myServer, endpoints: [createDomains, myCustomEndpoint] });
 ```
 
 ## Available Tools
 
 The following tools are available in this MCP server.
 
-### Resource `v2.domains`:
+### Resource `domains`:
 
-- `create_v2_domains` (`write`): POST /domains
-- `retrieve_v2_domains` (`read`): GET /domains/{id}
-- `update_v2_domains` (`write`): PATCH /domains/{id}
-- `list_v2_domains` (`read`): GET /domains
-- `delete_v2_domains` (`write`): DELETE /domains/{id}
-- `list_dns_records_v2_domains` (`read`): GET /domains/{id}/dns-records
+- `create_domains` (`write`): POST /domains
+- `retrieve_domains` (`read`): GET /domains/{id}
+- `update_domains` (`write`): PATCH /domains/{id}
+- `list_domains` (`read`): GET /domains
+- `delete_domains` (`write`): DELETE /domains/{id}
+- `list_dns_records_domains` (`read`): GET /domains/{id}/dns-records
 
-### Resource `v2.domains.auth`:
+### Resource `domains.auth`:
 
-- `create_domains_v2_auth` (`write`): POST /domains/{id}/auth
-- `update_domains_v2_auth` (`write`): PATCH /domains/{id}/auth
+- `create_domains_auth` (`write`): POST /domains/{id}/auth
+- `update_domains_auth` (`write`): PATCH /domains/{id}/auth
 
-### Resource `v2.email_addresses`:
+### Resource `email_addresses`:
 
-- `create_v2_email_addresses` (`write`): POST /email-addresses
-- `retrieve_v2_email_addresses` (`read`): GET /email-addresses/{id}
-- `update_v2_email_addresses` (`write`): PUT /email-addresses/{id}
-- `list_v2_email_addresses` (`read`): GET /email-addresses
-- `delete_v2_email_addresses` (`write`): DELETE /email-addresses/{id}
+- `create_email_addresses` (`write`): POST /email-addresses
+- `retrieve_email_addresses` (`read`): GET /email-addresses/{id}
+- `update_email_addresses` (`write`): PUT /email-addresses/{id}
+- `list_email_addresses` (`read`): GET /email-addresses
+- `delete_email_addresses` (`write`): DELETE /email-addresses/{id}
 
-### Resource `v2.emails`:
+### Resource `emails`:
 
-- `create_v2_emails` (`write`): POST /emails
-- `retrieve_v2_emails` (`read`): GET /emails/{id}
-- `reply_v2_emails` (`write`): POST /emails/{id}/reply
+- `create_emails` (`write`): POST /emails
+- `retrieve_emails` (`read`): GET /emails/{id}
+- `reply_emails` (`write`): POST /emails/{id}/reply
 
-### Resource `v2.emails.schedule`:
+### Resource `emails.schedule`:
 
-- `create_emails_v2_schedule` (`write`): POST /emails/schedule
-- `retrieve_emails_v2_schedule` (`read`): GET /emails/schedule/{id}
-- `list_emails_v2_schedule` (`read`): GET /emails/schedule
-- `delete_emails_v2_schedule` (`write`): DELETE /emails/schedule/{id}
+- `create_emails_schedule` (`write`): POST /emails/schedule
+- `retrieve_emails_schedule` (`read`): GET /emails/schedule/{id}
+- `list_emails_schedule` (`read`): GET /emails/schedule
+- `delete_emails_schedule` (`write`): DELETE /emails/schedule/{id}
 
-### Resource `v2.endpoints`:
+### Resource `endpoints`:
 
-- `create_v2_endpoints` (`write`): POST /endpoints
-- `retrieve_v2_endpoints` (`read`): GET /endpoints/{id}
-- `update_v2_endpoints` (`write`): PUT /endpoints/{id}
-- `list_v2_endpoints` (`read`): GET /endpoints
-- `delete_v2_endpoints` (`write`): DELETE /endpoints/{id}
-- `test_v2_endpoints` (`write`): POST /endpoints/{id}/test
+- `create_endpoints` (`write`): POST /endpoints
+- `retrieve_endpoints` (`read`): GET /endpoints/{id}
+- `update_endpoints` (`write`): PUT /endpoints/{id}
+- `list_endpoints` (`read`): GET /endpoints
+- `delete_endpoints` (`write`): DELETE /endpoints/{id}
+- `test_endpoints` (`write`): POST /endpoints/{id}/test
 
-### Resource `v2.mail`:
+### Resource `mail`:
 
-- `create_v2_mail` (`write`): POST /mail
-- `retrieve_v2_mail` (`read`): GET /mail/{id}
-- `update_v2_mail` (`write`): PATCH /mail/{id}
-- `list_v2_mail` (`read`): GET /mail
-- `bulk_create_v2_mail` (`write`): POST /mail/bulk
-- `retrieve_thread_v2_mail` (`read`): GET /mail/{id}/thread
-- `thread_counts_v2_mail` (`write`): POST /mail/thread-counts
-
-### Resource `v2.onboarding`:
-
-- `check_reply_v2_onboarding` (`read`): GET /onboarding/check-reply
-- `demo_v2_onboarding` (`write`): POST /onboarding/demo
-- `webhook_v2_onboarding` (`write`): POST /onboarding/webhook
+- `create_mail` (`write`): POST /mail
+- `retrieve_mail` (`read`): GET /mail/{id}
+- `update_mail` (`write`): PATCH /mail/{id}
+- `list_mail` (`read`): GET /mail
+- `bulk_create_mail` (`write`): POST /mail/bulk
+- `retrieve_thread_mail` (`read`): GET /mail/{id}/thread
+- `thread_counts_mail` (`write`): POST /mail/thread-counts
