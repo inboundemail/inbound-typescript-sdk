@@ -1,6 +1,6 @@
 {
   "name": "inbound",
-  "version": "0.0.1",
+  "version": "5.0.0",
   "description": "The official TypeScript library for the Inbound API",
   "author": "Inbound <support@inbound.new>",
   "types": "dist/index.d.ts",
