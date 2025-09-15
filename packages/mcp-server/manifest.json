@@ -9,9 +9,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/inboundemail/inbound-python.git"
+    "url": "git+https://github.com/inboundemail/inbound-typescript-sdk.git"
   },
-  "homepage": "https://github.com/inboundemail/inbound-python/tree/main/packages/mcp-server#readme",
+  "homepage": "https://github.com/inboundemail/inbound-typescript-sdk/tree/main/packages/mcp-server#readme",
   "documentation": "https://inbound.new",
   "server": {
     "type": "node",
