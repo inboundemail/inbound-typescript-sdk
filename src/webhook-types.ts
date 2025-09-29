@@ -19,6 +19,7 @@ export interface InboundEmailAttachment {
   size: number | undefined
   contentId: string | undefined
   contentDisposition: string | undefined
+  downloadUrl: string // URL to download the attachment (requires API key authentication)
 }
 
 // Email headers structure with common headers typed
