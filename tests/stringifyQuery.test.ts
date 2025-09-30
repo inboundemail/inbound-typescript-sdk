@@ -1,6 +1,6 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { Inbound } from 'inboundemail';
+import { Inbound } from 'inbound';
 
 const { stringifyQuery } = Inbound.prototype as any;
 

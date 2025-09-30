@@ -8,8 +8,8 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "paths": {
-      "inboundemail/*": ["./src/*"],
-      "inboundemail": ["./src/index.ts"]
+      "inbound/*": ["./src/*"],
+      "inbound": ["./src/index.ts"]
     },
     "noEmit": true,
 

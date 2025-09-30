@@ -85,12 +85,12 @@ export class Schedule extends APIResource {
    *
    * @example
    * ```ts
-   * const response = await client.v2.emails.schedule.cancel(
+   * const schedule = await client.v2.emails.schedule.delete(
    *   'id',
    * );
    * ```
    */
-  cancel(id: string, options?: RequestOptions): APIPromise<ScheduleCancelResponse> {
+  delete(id: string, options?: RequestOptions): APIPromise<ScheduleDeleteResponse> {
     return this._client.delete(path`/api/v2/emails/schedule/${id}`, options);
   }
 }
@@ -327,7 +327,7 @@ export namespace ScheduleListResponse {
   }
 }
 
-export interface ScheduleCancelResponse {
+export interface ScheduleDeleteResponse {
   /**
    * Unique scheduled email identifier
    */
@@ -454,7 +454,7 @@ export declare namespace Schedule {
     type ScheduleCreateResponse as ScheduleCreateResponse,
     type ScheduleRetrieveResponse as ScheduleRetrieveResponse,
     type ScheduleListResponse as ScheduleListResponse,
-    type ScheduleCancelResponse as ScheduleCancelResponse,
+    type ScheduleDeleteResponse as ScheduleDeleteResponse,
     type ScheduleCreateParams as ScheduleCreateParams,
     type ScheduleListParams as ScheduleListParams,
   };

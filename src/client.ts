@@ -16,7 +16,7 @@ import * as Errors from './core/error';
 import * as Uploads from './core/uploads';
 import * as API from './resources/index';
 import { APIPromise } from './core/api-promise';
-import { V2 } from './resources/v2/v2';
+import { V2, V2RetrieveParams } from './resources/v2/v2';
 import { type Fetch } from './internal/builtin-types';
 import { HeadersLike, NullableHeaders, buildHeaders } from './internal/headers';
 import { FinalRequestOptions, RequestOptions } from './internal/request-options';
@@ -728,5 +728,5 @@ Inbound.V2 = V2;
 export declare namespace Inbound {
   export type RequestOptions = Opts.RequestOptions;
 
-  export { V2 as V2 };
+  export { V2 as V2, type V2RetrieveParams as V2RetrieveParams };
 }

@@ -4,9 +4,9 @@ import { APIResource } from '../../../core/resource';
 import * as ScheduleAPI from './schedule';
 import {
   Schedule,
-  ScheduleCancelResponse,
   ScheduleCreateParams,
   ScheduleCreateResponse,
+  ScheduleDeleteResponse,
   ScheduleListParams,
   ScheduleListResponse,
   ScheduleRetrieveResponse,
@@ -18,6 +18,36 @@ import { path } from '../../../internal/utils/path';
 
 export class Emails extends APIResource {
   schedule: ScheduleAPI.Schedule = new ScheduleAPI.Schedule(this._client);
+
+  /**
+   * Send an email through the Inbound API with comprehensive support for HTML/text
+   * content, file attachments (up to 25MB each, 40MB total), custom SMTP headers,
+   * CC/BCC recipients, and idempotent operations. Sender domain must be verified
+   * unless using the special agent@inbnd.dev address (available to all users).
+   * Includes usage tracking and rate limiting via Autumn. Email delivery powered by
+   * AWS SES with full RFC 5322 compliance. Compatible with Resend API format for
+   * easy migration.
+   *
+   * @example
+   * ```ts
+   * const email = await client.v2.emails.create({
+   *   from: 'Support Team <support@yourdomain.com>',
+   *   subject: 'Welcome to Inbound',
+   *   to: ['customer@example.com'],
+   * });
+   * ```
+   */
+  create(params: EmailCreateParams, options?: RequestOptions): APIPromise<EmailCreateResponse> {
+    const { 'Idempotency-Key': idempotencyKey, ...body } = params;
+    return this._client.post('/api/v2/emails', {
+      body,
+      ...options,
+      headers: buildHeaders([
+        { ...(idempotencyKey != null ? { 'Idempotency-Key': idempotencyKey } : undefined) },
+        options?.headers,
+      ]),
+    });
+  }
 
   /**
    * Retrieves a single sent email by its ID. Returns email metadata including
@@ -107,36 +137,6 @@ export class Emails extends APIResource {
   ): APIPromise<EmailRetryDeliveryResponse> {
     return this._client.post(path`/api/v2/emails/${id}/retry-delivery`, { body, ...options });
   }
-
-  /**
-   * Send an email through the Inbound API with comprehensive support for HTML/text
-   * content, file attachments (up to 25MB each, 40MB total), custom SMTP headers,
-   * CC/BCC recipients, and idempotent operations. Sender domain must be verified
-   * unless using the special agent@inbnd.dev address (available to all users).
-   * Includes usage tracking and rate limiting via Autumn. Email delivery powered by
-   * AWS SES with full RFC 5322 compliance. Compatible with Resend API format for
-   * easy migration.
-   *
-   * @example
-   * ```ts
-   * const response = await client.v2.emails.send({
-   *   from: 'Support Team <support@yourdomain.com>',
-   *   subject: 'Welcome to Inbound',
-   *   to: ['customer@example.com'],
-   * });
-   * ```
-   */
-  send(params: EmailSendParams, options?: RequestOptions): APIPromise<EmailSendResponse> {
-    const { 'Idempotency-Key': idempotencyKey, ...body } = params;
-    return this._client.post('/api/v2/emails', {
-      body,
-      ...options,
-      headers: buildHeaders([
-        { ...(idempotencyKey != null ? { 'Idempotency-Key': idempotencyKey } : undefined) },
-        options?.headers,
-      ]),
-    });
-  }
 }
 
 export interface AttachmentInput {
@@ -169,6 +169,18 @@ export interface AttachmentInput {
    * Remote file URL to fetch attachment from (mutually exclusive with content)
    */
   path?: string;
+}
+
+export interface EmailCreateResponse {
+  /**
+   * Unique email identifier in nanoid format
+   */
+  id: string;
+
+  /**
+   * AWS SES Message ID for delivery tracking
+   */
+  messageId: string;
 }
 
 export interface EmailRetrieveResponse {
@@ -309,16 +321,84 @@ export interface EmailRetryDeliveryResponse {
   error?: string;
 }
 
-export interface EmailSendResponse {
+export interface EmailCreateParams {
   /**
-   * Unique email identifier in nanoid format
+   * Body param: Sender email address. Supports both "email@domain.com" and "Display
+   * Name <email@domain.com>" formats. Must be from a verified domain or
+   * agent@inbnd.dev
    */
-  id: string;
+  from: string;
 
   /**
-   * AWS SES Message ID for delivery tracking
+   * Body param: Email subject line (max 998 characters)
    */
-  messageId: string;
+  subject: string;
+
+  /**
+   * Body param: Recipient email address(es). Can be a single string or array of
+   * strings
+   */
+  to: string | Array<string>;
+
+  /**
+   * Body param: Email attachments (max 20 files, 25MB each, 40MB total)
+   */
+  attachments?: Array<AttachmentInput>;
+
+  /**
+   * Body param: Blind carbon copy recipient(s)
+   */
+  bcc?: string | Array<string>;
+
+  /**
+   * Body param: Carbon copy recipient(s)
+   */
+  cc?: string | Array<string>;
+
+  /**
+   * Body param: Custom SMTP headers as key-value pairs
+   */
+  headers?: { [key: string]: string };
+
+  /**
+   * Body param: HTML email body. Either html or text must be provided
+   */
+  html?: string;
+
+  /**
+   * Body param: Reply-To address(es) in snake_case format (legacy)
+   */
+  reply_to?: string | Array<string>;
+
+  /**
+   * Body param: Reply-To address(es) in camelCase format (Resend-compatible)
+   */
+  replyTo?: string | Array<string>;
+
+  /**
+   * Body param: Resend-compatible metadata tags
+   */
+  tags?: Array<EmailCreateParams.Tag>;
+
+  /**
+   * Body param: Plain text email body. Either html or text must be provided
+   */
+  text?: string;
+
+  /**
+   * Header param: Unique key to prevent duplicate email sends (optional). If
+   * provided, the same key will return the same email ID without sending duplicate
+   * emails. Useful for retry logic and ensuring exactly-once delivery
+   */
+  'Idempotency-Key'?: string;
+}
+
+export namespace EmailCreateParams {
+  export interface Tag {
+    name?: string;
+
+    value?: string;
+  }
 }
 
 export interface EmailReplyParams {
@@ -406,100 +486,20 @@ export interface EmailRetryDeliveryParams {
   deliveryId: string;
 }
 
-export interface EmailSendParams {
-  /**
-   * Body param: Sender email address. Supports both "email@domain.com" and "Display
-   * Name <email@domain.com>" formats. Must be from a verified domain or
-   * agent@inbnd.dev
-   */
-  from: string;
-
-  /**
-   * Body param: Email subject line (max 998 characters)
-   */
-  subject: string;
-
-  /**
-   * Body param: Recipient email address(es). Can be a single string or array of
-   * strings
-   */
-  to: string | Array<string>;
-
-  /**
-   * Body param: Email attachments (max 20 files, 25MB each, 40MB total)
-   */
-  attachments?: Array<AttachmentInput>;
-
-  /**
-   * Body param: Blind carbon copy recipient(s)
-   */
-  bcc?: string | Array<string>;
-
-  /**
-   * Body param: Carbon copy recipient(s)
-   */
-  cc?: string | Array<string>;
-
-  /**
-   * Body param: Custom SMTP headers as key-value pairs
-   */
-  headers?: { [key: string]: string };
-
-  /**
-   * Body param: HTML email body. Either html or text must be provided
-   */
-  html?: string;
-
-  /**
-   * Body param: Reply-To address(es) in snake_case format (legacy)
-   */
-  reply_to?: string | Array<string>;
-
-  /**
-   * Body param: Reply-To address(es) in camelCase format (Resend-compatible)
-   */
-  replyTo?: string | Array<string>;
-
-  /**
-   * Body param: Resend-compatible metadata tags
-   */
-  tags?: Array<EmailSendParams.Tag>;
-
-  /**
-   * Body param: Plain text email body. Either html or text must be provided
-   */
-  text?: string;
-
-  /**
-   * Header param: Unique key to prevent duplicate email sends (optional). If
-   * provided, the same key will return the same email ID without sending duplicate
-   * emails. Useful for retry logic and ensuring exactly-once delivery
-   */
-  'Idempotency-Key'?: string;
-}
-
-export namespace EmailSendParams {
-  export interface Tag {
-    name?: string;
-
-    value?: string;
-  }
-}
-
 Emails.Schedule = Schedule;
 
 export declare namespace Emails {
   export {
     type AttachmentInput as AttachmentInput,
+    type EmailCreateResponse as EmailCreateResponse,
     type EmailRetrieveResponse as EmailRetrieveResponse,
     type EmailReplyResponse as EmailReplyResponse,
     type EmailResendResponse as EmailResendResponse,
     type EmailRetryDeliveryResponse as EmailRetryDeliveryResponse,
-    type EmailSendResponse as EmailSendResponse,
+    type EmailCreateParams as EmailCreateParams,
     type EmailReplyParams as EmailReplyParams,
     type EmailResendParams as EmailResendParams,
     type EmailRetryDeliveryParams as EmailRetryDeliveryParams,
-    type EmailSendParams as EmailSendParams,
   };
 
   export {
@@ -507,7 +507,7 @@ export declare namespace Emails {
     type ScheduleCreateResponse as ScheduleCreateResponse,
     type ScheduleRetrieveResponse as ScheduleRetrieveResponse,
     type ScheduleListResponse as ScheduleListResponse,
-    type ScheduleCancelResponse as ScheduleCancelResponse,
+    type ScheduleDeleteResponse as ScheduleDeleteResponse,
     type ScheduleCreateParams as ScheduleCreateParams,
     type ScheduleListParams as ScheduleListParams,
   };
