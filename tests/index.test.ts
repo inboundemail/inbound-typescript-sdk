@@ -302,26 +302,13 @@ describe('instantiate client', () => {
     test('empty env variable', () => {
       process.env['INBOUND_BASE_URL'] = ''; // empty
       const client = new Inbound({ apiKey: 'My API Key' });
-      expect(client.baseURL).toEqual('https://inbound.new/api/v2');
+      expect(client.baseURL).toEqual('https://api.example.com');
     });
 
     test('blank env variable', () => {
       process.env['INBOUND_BASE_URL'] = '  '; // blank
       const client = new Inbound({ apiKey: 'My API Key' });
-      expect(client.baseURL).toEqual('https://inbound.new/api/v2');
-    });
-
-    test('env variable with environment', () => {
-      process.env['INBOUND_BASE_URL'] = 'https://example.com/from_env';
-
-      expect(
-        () => new Inbound({ apiKey: 'My API Key', environment: 'production' }),
-      ).toThrowErrorMatchingInlineSnapshot(
-        `"Ambiguous URL; The \`baseURL\` option (or INBOUND_BASE_URL env var) and the \`environment\` option are given. If you want to use the environment you must pass baseURL: null"`,
-      );
-
-      const client = new Inbound({ apiKey: 'My API Key', baseURL: null, environment: 'production' });
-      expect(client.baseURL).toEqual('https://inbound.new/api/v2');
+      expect(client.baseURL).toEqual('https://api.example.com');
     });
 
     test('in request options', () => {

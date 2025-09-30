@@ -4,7 +4,7 @@
 
 This library provides convenient access to the Inbound REST API from server-side TypeScript or JavaScript.
 
-The REST API documentation can be found on [inbound.new](https://inbound.new/support). The full API of this library can be found in [api.md](api.md).
+The full API of this library can be found in [api.md](api.md).
 
 It is generated with [Stainless](https://www.stainless.com/).
 
@@ -27,12 +27,11 @@ import Inbound from 'inbound';
 
 const client = new Inbound({
   apiKey: process.env['INBOUND_API_KEY'], // This is the default and can be omitted
-  environment: 'environment_1', // defaults to 'production'
 });
 
-const domains = await client.domains.list();
+const response = await client.v2.emails.reply('REPLACE_ME', { from: 'support@yourdomain.com' });
 
-console.log(domains.data);
+console.log(response.id);
 ```
 
 ### Request & Response types
@@ -45,10 +44,10 @@ import Inbound from 'inbound';
 
 const client = new Inbound({
   apiKey: process.env['INBOUND_API_KEY'], // This is the default and can be omitted
-  environment: 'environment_1', // defaults to 'production'
 });
 
-const domains: Inbound.DomainListResponse = await client.domains.list();
+const params: Inbound.V2.EmailReplyParams = { from: 'support@yourdomain.com' };
+const response: Inbound.V2.EmailReplyResponse = await client.v2.emails.reply('REPLACE_ME', params);
 ```
 
 Documentation for each method, request param, and response field are available in docstrings and will appear on hover in most modern editors.
@@ -61,15 +60,17 @@ a subclass of `APIError` will be thrown:
 
 <!-- prettier-ignore -->
 ```ts
-const domains = await client.domains.list().catch(async (err) => {
-  if (err instanceof Inbound.APIError) {
-    console.log(err.status); // 400
-    console.log(err.name); // BadRequestError
-    console.log(err.headers); // {server: 'nginx', ...}
-  } else {
-    throw err;
-  }
-});
+const response = await client.v2.emails
+  .reply('REPLACE_ME', { from: 'support@yourdomain.com' })
+  .catch(async (err) => {
+    if (err instanceof Inbound.APIError) {
+      console.log(err.status); // 400
+      console.log(err.name); // BadRequestError
+      console.log(err.headers); // {server: 'nginx', ...}
+    } else {
+      throw err;
+    }
+  });
 ```
 
 Error codes are as follows:
@@ -101,7 +102,7 @@ const client = new Inbound({
 });
 
 // Or, configure per-request:
-await client.domains.list({
+await client.v2.emails.reply('REPLACE_ME', { from: 'support@yourdomain.com' }, {
   maxRetries: 5,
 });
 ```
@@ -118,7 +119,7 @@ const client = new Inbound({
 });
 
 // Override per-request:
-await client.domains.list({
+await client.v2.emails.reply('REPLACE_ME', { from: 'support@yourdomain.com' }, {
   timeout: 5 * 1000,
 });
 ```
@@ -141,13 +142,15 @@ Unlike `.asResponse()` this method consumes the body, returning once it is parse
 ```ts
 const client = new Inbound();
 
-const response = await client.domains.list().asResponse();
+const response = await client.v2.emails.reply('REPLACE_ME', { from: 'support@yourdomain.com' }).asResponse();
 console.log(response.headers.get('X-My-Header'));
 console.log(response.statusText); // access the underlying Response object
 
-const { data: domains, response: raw } = await client.domains.list().withResponse();
+const { data: response, response: raw } = await client.v2.emails
+  .reply('REPLACE_ME', { from: 'support@yourdomain.com' })
+  .withResponse();
 console.log(raw.headers.get('X-My-Header'));
-console.log(domains.data);
+console.log(response.id);
 ```
 
 ### Logging
@@ -227,7 +230,7 @@ parameter. This library doesn't validate at runtime that the request matches the
 send will be sent as-is.
 
 ```ts
-client.domains.list({
+client.v2.emails.reply({
   // ...
   // @ts-expect-error baz is not yet public
   baz: 'undocumented option',

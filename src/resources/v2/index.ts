@@ -2,16 +2,15 @@
 
 export {
   Emails,
+  type AttachmentInput,
   type EmailRetrieveResponse,
   type EmailReplyResponse,
+  type EmailResendResponse,
+  type EmailRetryDeliveryResponse,
   type EmailSendResponse,
   type EmailReplyParams,
+  type EmailResendParams,
+  type EmailRetryDeliveryParams,
   type EmailSendParams,
-} from './emails';
-export {
-  Schedule,
-  type ScheduleCreateResponse,
-  type ScheduleListResponse,
-  type ScheduleCreateParams,
-  type ScheduleListParams,
-} from './schedule';
+} from './emails/index';
+export { V2 } from './v2';

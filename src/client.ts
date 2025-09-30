@@ -16,76 +16,7 @@ import * as Errors from './core/error';
 import * as Uploads from './core/uploads';
 import * as API from './resources/index';
 import { APIPromise } from './core/api-promise';
-import {
-  EmailAddressCreateParams,
-  EmailAddressCreateResponse,
-  EmailAddressDeleteResponse,
-  EmailAddressListParams,
-  EmailAddressListResponse,
-  EmailAddressRetrieveResponse,
-  EmailAddressUpdateParams,
-  EmailAddressUpdateResponse,
-  EmailAddresses,
-} from './resources/email-addresses';
-import {
-  EndpointCreateParams,
-  EndpointCreateResponse,
-  EndpointDeleteResponse,
-  EndpointListParams,
-  EndpointListResponse,
-  EndpointRetrieveResponse,
-  EndpointTestParams,
-  EndpointTestResponse,
-  EndpointUpdateParams,
-  EndpointUpdateResponse,
-  Endpoints,
-} from './resources/endpoints';
-import {
-  Mail,
-  MailBulkUpdateParams,
-  MailBulkUpdateResponse,
-  MailGetThreadCountsParams,
-  MailGetThreadCountsResponse,
-  MailGetThreadResponse,
-  MailListParams,
-  MailListResponse,
-  MailReplyParams,
-  MailReplyResponse,
-  MailRetrieveResponse,
-  MailUpdateParams,
-  MailUpdateResponse,
-} from './resources/mail';
-import {
-  Onboarding,
-  OnboardingCheckReplyResponse,
-  OnboardingHandleWebhookParams,
-  OnboardingHandleWebhookResponse,
-  OnboardingSendDemoParams,
-  OnboardingSendDemoResponse,
-} from './resources/onboarding';
-import {
-  DomainCreateParams,
-  DomainCreateResponse,
-  DomainDeleteResponse,
-  DomainListParams,
-  DomainListResponse,
-  DomainRetrieveDNSRecordsResponse,
-  DomainRetrieveParams,
-  DomainRetrieveResponse,
-  DomainUpdateCatchAllParams,
-  DomainUpdateCatchAllResponse,
-  DomainUpgradeMailFromParams,
-  DomainUpgradeMailFromResponse,
-  Domains,
-} from './resources/domains/domains';
-import {
-  EmailReplyParams,
-  EmailReplyResponse,
-  EmailRetrieveResponse,
-  EmailSendParams,
-  EmailSendResponse,
-  Emails,
-} from './resources/emails/emails';
+import { V2 } from './resources/v2/v2';
 import { type Fetch } from './internal/builtin-types';
 import { HeadersLike, NullableHeaders, buildHeaders } from './internal/headers';
 import { FinalRequestOptions, RequestOptions } from './internal/request-options';
@@ -99,26 +30,11 @@ import {
 } from './internal/utils/log';
 import { isEmptyObj } from './internal/utils/values';
 
-const environments = {
-  production: 'https://inbound.new/api/v2',
-  environment_1: 'http://localhost:3000/api/v2',
-};
-type Environment = keyof typeof environments;
-
 export interface ClientOptions {
   /**
-   * API Key authentication. Use 'Bearer YOUR_API_KEY'
+   * Defaults to process.env['INBOUND_API_KEY'].
    */
   apiKey?: string | null | undefined;
-
-  /**
-   * Specifies the environment to use for the API.
-   *
-   * Each environment maps to a different base URL:
-   * - `production` corresponds to `https://inbound.new/api/v2`
-   * - `environment_1` corresponds to `http://localhost:3000/api/v2`
-   */
-  environment?: Environment | undefined;
 
   /**
    * Override the default base URL for the API, e.g., "https://api.example.com/v2/"
@@ -211,8 +127,7 @@ export class Inbound {
    * API Client for interfacing with the Inbound API.
    *
    * @param {string | null | undefined} [opts.apiKey=process.env['INBOUND_API_KEY'] ?? null]
-   * @param {Environment} [opts.environment=production] - Specifies the environment URL to use for the API.
-   * @param {string} [opts.baseURL=process.env['INBOUND_BASE_URL'] ?? https://inbound.new/api/v2] - Override the default base URL for the API.
+   * @param {string} [opts.baseURL=process.env['INBOUND_BASE_URL'] ?? https://api.example.com] - Override the default base URL for the API.
    * @param {number} [opts.timeout=1 minute] - The maximum amount of time (in milliseconds) the client will wait for a response before timing out.
    * @param {MergedRequestInit} [opts.fetchOptions] - Additional `RequestInit` options to be passed to `fetch` calls.
    * @param {Fetch} [opts.fetch] - Specify a custom `fetch` function implementation.
@@ -228,17 +143,10 @@ export class Inbound {
     const options: ClientOptions = {
       apiKey,
       ...opts,
-      baseURL,
-      environment: opts.environment ?? 'production',
+      baseURL: baseURL || `https://api.example.com`,
     };
 
-    if (baseURL && opts.environment) {
-      throw new Errors.InboundError(
-        'Ambiguous URL; The `baseURL` option (or INBOUND_BASE_URL env var) and the `environment` option are given. If you want to use the environment you must pass baseURL: null',
-      );
-    }
-
-    this.baseURL = options.baseURL || environments[options.environment || 'production'];
+    this.baseURL = options.baseURL!;
     this.timeout = options.timeout ?? Inbound.DEFAULT_TIMEOUT /* 1 minute */;
     this.logger = options.logger ?? console;
     const defaultLogLevel = 'warn';
@@ -264,8 +172,7 @@ export class Inbound {
   withOptions(options: Partial<ClientOptions>): this {
     const client = new (this.constructor as any as new (props: ClientOptions) => typeof this)({
       ...this._options,
-      environment: options.environment ? options.environment : undefined,
-      baseURL: options.environment ? undefined : this.baseURL,
+      baseURL: this.baseURL,
       maxRetries: this.maxRetries,
       timeout: this.timeout,
       logger: this.logger,
@@ -282,7 +189,7 @@ export class Inbound {
    * Check whether the base URL is set to its default.
    */
   #baseURLOverridden(): boolean {
-    return this.baseURL !== environments[this._options.environment || 'production'];
+    return this.baseURL !== 'https://api.example.com';
   }
 
   protected defaultQuery(): Record<string, string | undefined> | undefined {
@@ -306,7 +213,7 @@ export class Inbound {
     if (this.apiKey == null) {
       return undefined;
     }
-    return buildHeaders([{ Authorization: this.apiKey }]);
+    return buildHeaders([{ Authorization: `Bearer ${this.apiKey}` }]);
   }
 
   /**
@@ -813,97 +720,13 @@ export class Inbound {
 
   static toFile = Uploads.toFile;
 
-  domains: API.Domains = new API.Domains(this);
-  emailAddresses: API.EmailAddresses = new API.EmailAddresses(this);
-  emails: API.Emails = new API.Emails(this);
-  endpoints: API.Endpoints = new API.Endpoints(this);
-  mail: API.Mail = new API.Mail(this);
-  onboarding: API.Onboarding = new API.Onboarding(this);
+  v2: API.V2 = new API.V2(this);
 }
 
-Inbound.Domains = Domains;
-Inbound.EmailAddresses = EmailAddresses;
-Inbound.Emails = Emails;
-Inbound.Endpoints = Endpoints;
-Inbound.Mail = Mail;
-Inbound.Onboarding = Onboarding;
+Inbound.V2 = V2;
 
 export declare namespace Inbound {
   export type RequestOptions = Opts.RequestOptions;
 
-  export {
-    Domains as Domains,
-    type DomainCreateResponse as DomainCreateResponse,
-    type DomainRetrieveResponse as DomainRetrieveResponse,
-    type DomainListResponse as DomainListResponse,
-    type DomainDeleteResponse as DomainDeleteResponse,
-    type DomainRetrieveDNSRecordsResponse as DomainRetrieveDNSRecordsResponse,
-    type DomainUpdateCatchAllResponse as DomainUpdateCatchAllResponse,
-    type DomainUpgradeMailFromResponse as DomainUpgradeMailFromResponse,
-    type DomainCreateParams as DomainCreateParams,
-    type DomainRetrieveParams as DomainRetrieveParams,
-    type DomainListParams as DomainListParams,
-    type DomainUpdateCatchAllParams as DomainUpdateCatchAllParams,
-    type DomainUpgradeMailFromParams as DomainUpgradeMailFromParams,
-  };
-
-  export {
-    EmailAddresses as EmailAddresses,
-    type EmailAddressCreateResponse as EmailAddressCreateResponse,
-    type EmailAddressRetrieveResponse as EmailAddressRetrieveResponse,
-    type EmailAddressUpdateResponse as EmailAddressUpdateResponse,
-    type EmailAddressListResponse as EmailAddressListResponse,
-    type EmailAddressDeleteResponse as EmailAddressDeleteResponse,
-    type EmailAddressCreateParams as EmailAddressCreateParams,
-    type EmailAddressUpdateParams as EmailAddressUpdateParams,
-    type EmailAddressListParams as EmailAddressListParams,
-  };
-
-  export {
-    Emails as Emails,
-    type EmailRetrieveResponse as EmailRetrieveResponse,
-    type EmailReplyResponse as EmailReplyResponse,
-    type EmailSendResponse as EmailSendResponse,
-    type EmailReplyParams as EmailReplyParams,
-    type EmailSendParams as EmailSendParams,
-  };
-
-  export {
-    Endpoints as Endpoints,
-    type EndpointCreateResponse as EndpointCreateResponse,
-    type EndpointRetrieveResponse as EndpointRetrieveResponse,
-    type EndpointUpdateResponse as EndpointUpdateResponse,
-    type EndpointListResponse as EndpointListResponse,
-    type EndpointDeleteResponse as EndpointDeleteResponse,
-    type EndpointTestResponse as EndpointTestResponse,
-    type EndpointCreateParams as EndpointCreateParams,
-    type EndpointUpdateParams as EndpointUpdateParams,
-    type EndpointListParams as EndpointListParams,
-    type EndpointTestParams as EndpointTestParams,
-  };
-
-  export {
-    Mail as Mail,
-    type MailRetrieveResponse as MailRetrieveResponse,
-    type MailUpdateResponse as MailUpdateResponse,
-    type MailListResponse as MailListResponse,
-    type MailBulkUpdateResponse as MailBulkUpdateResponse,
-    type MailGetThreadResponse as MailGetThreadResponse,
-    type MailGetThreadCountsResponse as MailGetThreadCountsResponse,
-    type MailReplyResponse as MailReplyResponse,
-    type MailUpdateParams as MailUpdateParams,
-    type MailListParams as MailListParams,
-    type MailBulkUpdateParams as MailBulkUpdateParams,
-    type MailGetThreadCountsParams as MailGetThreadCountsParams,
-    type MailReplyParams as MailReplyParams,
-  };
-
-  export {
-    Onboarding as Onboarding,
-    type OnboardingCheckReplyResponse as OnboardingCheckReplyResponse,
-    type OnboardingHandleWebhookResponse as OnboardingHandleWebhookResponse,
-    type OnboardingSendDemoResponse as OnboardingSendDemoResponse,
-    type OnboardingHandleWebhookParams as OnboardingHandleWebhookParams,
-    type OnboardingSendDemoParams as OnboardingSendDemoParams,
-  };
+  export { V2 as V2 };
 }

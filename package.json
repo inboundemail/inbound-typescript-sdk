@@ -2,7 +2,7 @@
   "name": "inbound",
   "version": "0.0.1",
   "description": "The official TypeScript library for the Inbound API",
-  "author": "Inbound <support@inbound.new>",
+  "author": "Inbound <>",
   "types": "dist/index.d.ts",
   "main": "dist/index.js",
   "type": "commonjs",
