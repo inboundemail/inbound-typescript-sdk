@@ -1,814 +1,732 @@
+// File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
+
+import type { RequestInit, RequestInfo, BodyInit } from './internal/builtin-types';
+import type { HTTPMethod, PromiseOrValue, MergedRequestInit, FinalizedRequestInit } from './internal/types';
+import { uuid4 } from './internal/utils/uuid';
+import { validatePositiveInteger, isAbsoluteURL, safeJSON } from './internal/utils/values';
+import { sleep } from './internal/utils/sleep';
+export type { Logger, LogLevel } from './internal/utils/log';
+import { castToError, isAbortError } from './internal/errors';
+import type { APIResponseProps } from './internal/parse';
+import { getPlatformHeaders } from './internal/detect-platform';
+import * as Shims from './internal/shims';
+import * as Opts from './internal/request-options';
+import { VERSION } from './version';
+import * as Errors from './core/error';
+import * as Uploads from './core/uploads';
+import * as API from './resources/index';
+import { APIPromise } from './core/api-promise';
+import { V2 } from './resources/v2/v2';
+import { type Fetch } from './internal/builtin-types';
+import { HeadersLike, NullableHeaders, buildHeaders } from './internal/headers';
+import { FinalRequestOptions, RequestOptions } from './internal/request-options';
+import { readEnv } from './internal/utils/env';
+import {
+  type LogLevel,
+  type Logger,
+  formatRequestDetails,
+  loggerFor,
+  parseLogLevel,
+} from './internal/utils/log';
+import { isEmptyObj } from './internal/utils/values';
+
+export interface ClientOptions {
+  /**
+   * Defaults to process.env['INBOUND_API_KEY'].
+   */
+  apiKey?: string | null | undefined;
+
+  /**
+   * Override the default base URL for the API, e.g., "https://api.example.com/v2/"
+   *
+   * Defaults to process.env['INBOUND_BASE_URL'].
+   */
+  baseURL?: string | null | undefined;
+
+  /**
+   * The maximum amount of time (in milliseconds) that the client should wait for a response
+   * from the server before timing out a single request.
+   *
+   * Note that request timeouts are retried by default, so in a worst-case scenario you may wait
+   * much longer than this timeout before the promise succeeds or fails.
+   *
+   * @unit milliseconds
+   */
+  timeout?: number | undefined;
+  /**
+   * Additional `RequestInit` options to be passed to `fetch` calls.
+   * Properties will be overridden by per-request `fetchOptions`.
+   */
+  fetchOptions?: MergedRequestInit | undefined;
+
+  /**
+   * Specify a custom `fetch` function implementation.
+   *
+   * If not provided, we expect that `fetch` is defined globally.
+   */
+  fetch?: Fetch | undefined;
+
+  /**
+   * The maximum number of times that the client will retry a request in case of a
+   * temporary failure, like a network error or a 5XX error from the server.
+   *
+   * @default 2
+   */
+  maxRetries?: number | undefined;
+
+  /**
+   * Default headers to include with every request to the API.
+   *
+   * These can be removed in individual requests by explicitly setting the
+   * header to `null` in request options.
+   */
+  defaultHeaders?: HeadersLike | undefined;
+
+  /**
+   * Default query parameters to include with every request to the API.
+   *
+   * These can be removed in individual requests by explicitly setting the
+   * param to `undefined` in request options.
+   */
+  defaultQuery?: Record<string, string | undefined> | undefined;
+
+  /**
+   * Set the log level.
+   *
+   * Defaults to process.env['INBOUND_LOG'] or 'warn' if it isn't set.
+   */
+  logLevel?: LogLevel | undefined;
+
+  /**
+   * Set the logger.
+   *
+   * Defaults to globalThis.console.
+   */
+  logger?: Logger | undefined;
+}
+
 /**
- * Main client class for the Inbound Email SDK
+ * API Client for interfacing with the Inbound API.
  */
+export class Inbound {
+  apiKey: string | null;
 
-import type { 
-  // Core response types
-  ApiResponse, IdempotencyOptions,
-  // Mail API
-  GetMailRequest, GetMailResponse, PostMailRequest, PostMailResponse, GetMailByIdResponse,
-  // Endpoints API  
-  GetEndpointsRequest, GetEndpointsResponse, PostEndpointsRequest, PostEndpointsResponse,
-  GetEndpointByIdResponse, PutEndpointByIdRequest, PutEndpointByIdResponse, DeleteEndpointByIdResponse,
-  // Domains API
-  GetDomainsRequest, GetDomainsResponse, PostDomainsRequest, PostDomainsResponse,
-  GetDomainByIdResponse, PutDomainByIdRequest, PutDomainByIdResponse,
-  // Email Addresses API
-  GetEmailAddressesRequest, GetEmailAddressesResponse, PostEmailAddressesRequest, PostEmailAddressesResponse,
-  GetEmailAddressByIdResponse, PutEmailAddressByIdRequest, PutEmailAddressByIdResponse, DeleteEmailAddressByIdResponse,
-  // Emails API (sending)
-  PostEmailsRequest, PostEmailsResponse, GetEmailByIdResponse,
-  // Reply API
-  PostEmailReplyRequest, PostEmailReplyResponse,
-  // Scheduling API
-  PostScheduleEmailRequest, PostScheduleEmailResponse, GetScheduledEmailsRequest, GetScheduledEmailsResponse,
-  GetScheduledEmailResponse, DeleteScheduledEmailResponse
-} from './types'
-import type { InboundWebhookEmail } from './webhook-types'
-import { buildQueryString } from './utils'
-import { renderReactToHtml, isReactRenderingSupported, getReactRenderingError } from './react-renderer'
+  baseURL: string;
+  maxRetries: number;
+  timeout: number;
+  logger: Logger | undefined;
+  logLevel: LogLevel | undefined;
+  fetchOptions: MergedRequestInit | undefined;
 
-export class InboundEmailClient {
-  private readonly apiKey: string
-  private readonly baseUrl: string
+  private fetch: Fetch;
+  #encoder: Opts.RequestEncoder;
+  protected idempotencyHeader?: string;
+  private _options: ClientOptions;
 
-  constructor(apiKey: string, baseUrl?: string) {
-    this.apiKey = apiKey
-    this.baseUrl = baseUrl || 'https://inbound.new/api/v2'
-    
-    if (!this.apiKey) {
-      throw new Error('API key is required')
-    }
+  /**
+   * API Client for interfacing with the Inbound API.
+   *
+   * @param {string | null | undefined} [opts.apiKey=process.env['INBOUND_API_KEY'] ?? null]
+   * @param {string} [opts.baseURL=process.env['INBOUND_BASE_URL'] ?? https://api.example.com] - Override the default base URL for the API.
+   * @param {number} [opts.timeout=1 minute] - The maximum amount of time (in milliseconds) the client will wait for a response before timing out.
+   * @param {MergedRequestInit} [opts.fetchOptions] - Additional `RequestInit` options to be passed to `fetch` calls.
+   * @param {Fetch} [opts.fetch] - Specify a custom `fetch` function implementation.
+   * @param {number} [opts.maxRetries=2] - The maximum number of times the client will retry a request.
+   * @param {HeadersLike} opts.defaultHeaders - Default headers to include with every request to the API.
+   * @param {Record<string, string | undefined>} opts.defaultQuery - Default query parameters to include with every request to the API.
+   */
+  constructor({
+    baseURL = readEnv('INBOUND_BASE_URL'),
+    apiKey = readEnv('INBOUND_API_KEY') ?? null,
+    ...opts
+  }: ClientOptions = {}) {
+    const options: ClientOptions = {
+      apiKey,
+      ...opts,
+      baseURL: baseURL || `https://api.example.com`,
+    };
+
+    this.baseURL = options.baseURL!;
+    this.timeout = options.timeout ?? Inbound.DEFAULT_TIMEOUT /* 1 minute */;
+    this.logger = options.logger ?? console;
+    const defaultLogLevel = 'warn';
+    // Set default logLevel early so that we can log a warning in parseLogLevel.
+    this.logLevel = defaultLogLevel;
+    this.logLevel =
+      parseLogLevel(options.logLevel, 'ClientOptions.logLevel', this) ??
+      parseLogLevel(readEnv('INBOUND_LOG'), "process.env['INBOUND_LOG']", this) ??
+      defaultLogLevel;
+    this.fetchOptions = options.fetchOptions;
+    this.maxRetries = options.maxRetries ?? 2;
+    this.fetch = options.fetch ?? Shims.getDefaultFetch();
+    this.#encoder = Opts.FallbackEncoder;
+
+    this._options = options;
+
+    this.apiKey = apiKey;
   }
 
   /**
-   * Make an authenticated request to the API with { data, error } response pattern
+   * Create a new client instance re-using the same options given to the current client with optional overriding.
    */
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
-    const url = `${this.baseUrl}${endpoint}`
-    
-    const headers = {
-      'Authorization': `Bearer ${this.apiKey}`,
-      'Content-Type': 'application/json',
-      ...options.headers,
+  withOptions(options: Partial<ClientOptions>): this {
+    const client = new (this.constructor as any as new (props: ClientOptions) => typeof this)({
+      ...this._options,
+      baseURL: this.baseURL,
+      maxRetries: this.maxRetries,
+      timeout: this.timeout,
+      logger: this.logger,
+      logLevel: this.logLevel,
+      fetch: this.fetch,
+      fetchOptions: this.fetchOptions,
+      apiKey: this.apiKey,
+      ...options,
+    });
+    return client;
+  }
+
+  /**
+   * Check whether the base URL is set to its default.
+   */
+  #baseURLOverridden(): boolean {
+    return this.baseURL !== 'https://api.example.com';
+  }
+
+  protected defaultQuery(): Record<string, string | undefined> | undefined {
+    return this._options.defaultQuery;
+  }
+
+  protected validateHeaders({ values, nulls }: NullableHeaders) {
+    if (this.apiKey && values.get('authorization')) {
+      return;
+    }
+    if (nulls.has('authorization')) {
+      return;
+    }
+
+    throw new Error(
+      'Could not resolve authentication method. Expected the apiKey to be set. Or for the "Authorization" headers to be explicitly omitted',
+    );
+  }
+
+  protected async authHeaders(opts: FinalRequestOptions): Promise<NullableHeaders | undefined> {
+    if (this.apiKey == null) {
+      return undefined;
+    }
+    return buildHeaders([{ Authorization: `Bearer ${this.apiKey}` }]);
+  }
+
+  /**
+   * Basic re-implementation of `qs.stringify` for primitive types.
+   */
+  protected stringifyQuery(query: Record<string, unknown>): string {
+    return Object.entries(query)
+      .filter(([_, value]) => typeof value !== 'undefined')
+      .map(([key, value]) => {
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+        }
+        if (value === null) {
+          return `${encodeURIComponent(key)}=`;
+        }
+        throw new Errors.InboundError(
+          `Cannot stringify type ${typeof value}; Expected string, number, boolean, or null. If you need to pass nested query parameters, you can manually encode them, e.g. { query: { 'foo[key1]': value1, 'foo[key2]': value2 } }, and please open a GitHub issue requesting better support for your use case.`,
+        );
+      })
+      .join('&');
+  }
+
+  private getUserAgent(): string {
+    return `${this.constructor.name}/JS ${VERSION}`;
+  }
+
+  protected defaultIdempotencyKey(): string {
+    return `stainless-node-retry-${uuid4()}`;
+  }
+
+  protected makeStatusError(
+    status: number,
+    error: Object,
+    message: string | undefined,
+    headers: Headers,
+  ): Errors.APIError {
+    return Errors.APIError.generate(status, error, message, headers);
+  }
+
+  buildURL(
+    path: string,
+    query: Record<string, unknown> | null | undefined,
+    defaultBaseURL?: string | undefined,
+  ): string {
+    const baseURL = (!this.#baseURLOverridden() && defaultBaseURL) || this.baseURL;
+    const url =
+      isAbsoluteURL(path) ?
+        new URL(path)
+      : new URL(baseURL + (baseURL.endsWith('/') && path.startsWith('/') ? path.slice(1) : path));
+
+    const defaultQuery = this.defaultQuery();
+    if (!isEmptyObj(defaultQuery)) {
+      query = { ...defaultQuery, ...query };
+    }
+
+    if (typeof query === 'object' && query && !Array.isArray(query)) {
+      url.search = this.stringifyQuery(query as Record<string, unknown>);
+    }
+
+    return url.toString();
+  }
+
+  /**
+   * Used as a callback for mutating the given `FinalRequestOptions` object.
+   */
+  protected async prepareOptions(options: FinalRequestOptions): Promise<void> {}
+
+  /**
+   * Used as a callback for mutating the given `RequestInit` object.
+   *
+   * This is useful for cases where you want to add certain headers based off of
+   * the request properties, e.g. `method` or `url`.
+   */
+  protected async prepareRequest(
+    request: RequestInit,
+    { url, options }: { url: string; options: FinalRequestOptions },
+  ): Promise<void> {}
+
+  get<Rsp>(path: string, opts?: PromiseOrValue<RequestOptions>): APIPromise<Rsp> {
+    return this.methodRequest('get', path, opts);
+  }
+
+  post<Rsp>(path: string, opts?: PromiseOrValue<RequestOptions>): APIPromise<Rsp> {
+    return this.methodRequest('post', path, opts);
+  }
+
+  patch<Rsp>(path: string, opts?: PromiseOrValue<RequestOptions>): APIPromise<Rsp> {
+    return this.methodRequest('patch', path, opts);
+  }
+
+  put<Rsp>(path: string, opts?: PromiseOrValue<RequestOptions>): APIPromise<Rsp> {
+    return this.methodRequest('put', path, opts);
+  }
+
+  delete<Rsp>(path: string, opts?: PromiseOrValue<RequestOptions>): APIPromise<Rsp> {
+    return this.methodRequest('delete', path, opts);
+  }
+
+  private methodRequest<Rsp>(
+    method: HTTPMethod,
+    path: string,
+    opts?: PromiseOrValue<RequestOptions>,
+  ): APIPromise<Rsp> {
+    return this.request(
+      Promise.resolve(opts).then((opts) => {
+        return { method, path, ...opts };
+      }),
+    );
+  }
+
+  request<Rsp>(
+    options: PromiseOrValue<FinalRequestOptions>,
+    remainingRetries: number | null = null,
+  ): APIPromise<Rsp> {
+    return new APIPromise(this, this.makeRequest(options, remainingRetries, undefined));
+  }
+
+  private async makeRequest(
+    optionsInput: PromiseOrValue<FinalRequestOptions>,
+    retriesRemaining: number | null,
+    retryOfRequestLogID: string | undefined,
+  ): Promise<APIResponseProps> {
+    const options = await optionsInput;
+    const maxRetries = options.maxRetries ?? this.maxRetries;
+    if (retriesRemaining == null) {
+      retriesRemaining = maxRetries;
+    }
+
+    await this.prepareOptions(options);
+
+    const { req, url, timeout } = await this.buildRequest(options, {
+      retryCount: maxRetries - retriesRemaining,
+    });
+
+    await this.prepareRequest(req, { url, options });
+
+    /** Not an API request ID, just for correlating local log entries. */
+    const requestLogID = 'log_' + ((Math.random() * (1 << 24)) | 0).toString(16).padStart(6, '0');
+    const retryLogStr = retryOfRequestLogID === undefined ? '' : `, retryOf: ${retryOfRequestLogID}`;
+    const startTime = Date.now();
+
+    loggerFor(this).debug(
+      `[${requestLogID}] sending request`,
+      formatRequestDetails({
+        retryOfRequestLogID,
+        method: options.method,
+        url,
+        options,
+        headers: req.headers,
+      }),
+    );
+
+    if (options.signal?.aborted) {
+      throw new Errors.APIUserAbortError();
+    }
+
+    const controller = new AbortController();
+    const response = await this.fetchWithTimeout(url, req, timeout, controller).catch(castToError);
+    const headersTime = Date.now();
+
+    if (response instanceof globalThis.Error) {
+      const retryMessage = `retrying, ${retriesRemaining} attempts remaining`;
+      if (options.signal?.aborted) {
+        throw new Errors.APIUserAbortError();
+      }
+      // detect native connection timeout errors
+      // deno throws "TypeError: error sending request for url (https://example/): client error (Connect): tcp connect error: Operation timed out (os error 60): Operation timed out (os error 60)"
+      // undici throws "TypeError: fetch failed" with cause "ConnectTimeoutError: Connect Timeout Error (attempted address: example:443, timeout: 1ms)"
+      // others do not provide enough information to distinguish timeouts from other connection errors
+      const isTimeout =
+        isAbortError(response) ||
+        /timed? ?out/i.test(String(response) + ('cause' in response ? String(response.cause) : ''));
+      if (retriesRemaining) {
+        loggerFor(this).info(
+          `[${requestLogID}] connection ${isTimeout ? 'timed out' : 'failed'} - ${retryMessage}`,
+        );
+        loggerFor(this).debug(
+          `[${requestLogID}] connection ${isTimeout ? 'timed out' : 'failed'} (${retryMessage})`,
+          formatRequestDetails({
+            retryOfRequestLogID,
+            url,
+            durationMs: headersTime - startTime,
+            message: response.message,
+          }),
+        );
+        return this.retryRequest(options, retriesRemaining, retryOfRequestLogID ?? requestLogID);
+      }
+      loggerFor(this).info(
+        `[${requestLogID}] connection ${isTimeout ? 'timed out' : 'failed'} - error; no more retries left`,
+      );
+      loggerFor(this).debug(
+        `[${requestLogID}] connection ${isTimeout ? 'timed out' : 'failed'} (error; no more retries left)`,
+        formatRequestDetails({
+          retryOfRequestLogID,
+          url,
+          durationMs: headersTime - startTime,
+          message: response.message,
+        }),
+      );
+      if (isTimeout) {
+        throw new Errors.APIConnectionTimeoutError();
+      }
+      throw new Errors.APIConnectionError({ cause: response });
+    }
+
+    const responseInfo = `[${requestLogID}${retryLogStr}] ${req.method} ${url} ${
+      response.ok ? 'succeeded' : 'failed'
+    } with status ${response.status} in ${headersTime - startTime}ms`;
+
+    if (!response.ok) {
+      const shouldRetry = await this.shouldRetry(response);
+      if (retriesRemaining && shouldRetry) {
+        const retryMessage = `retrying, ${retriesRemaining} attempts remaining`;
+
+        // We don't need the body of this response.
+        await Shims.CancelReadableStream(response.body);
+        loggerFor(this).info(`${responseInfo} - ${retryMessage}`);
+        loggerFor(this).debug(
+          `[${requestLogID}] response error (${retryMessage})`,
+          formatRequestDetails({
+            retryOfRequestLogID,
+            url: response.url,
+            status: response.status,
+            headers: response.headers,
+            durationMs: headersTime - startTime,
+          }),
+        );
+        return this.retryRequest(
+          options,
+          retriesRemaining,
+          retryOfRequestLogID ?? requestLogID,
+          response.headers,
+        );
+      }
+
+      const retryMessage = shouldRetry ? `error; no more retries left` : `error; not retryable`;
+
+      loggerFor(this).info(`${responseInfo} - ${retryMessage}`);
+
+      const errText = await response.text().catch((err: any) => castToError(err).message);
+      const errJSON = safeJSON(errText);
+      const errMessage = errJSON ? undefined : errText;
+
+      loggerFor(this).debug(
+        `[${requestLogID}] response error (${retryMessage})`,
+        formatRequestDetails({
+          retryOfRequestLogID,
+          url: response.url,
+          status: response.status,
+          headers: response.headers,
+          message: errMessage,
+          durationMs: Date.now() - startTime,
+        }),
+      );
+
+      const err = this.makeStatusError(response.status, errJSON, errMessage, response.headers);
+      throw err;
+    }
+
+    loggerFor(this).info(responseInfo);
+    loggerFor(this).debug(
+      `[${requestLogID}] response start`,
+      formatRequestDetails({
+        retryOfRequestLogID,
+        url: response.url,
+        status: response.status,
+        headers: response.headers,
+        durationMs: headersTime - startTime,
+      }),
+    );
+
+    return { response, options, controller, requestLogID, retryOfRequestLogID, startTime };
+  }
+
+  async fetchWithTimeout(
+    url: RequestInfo,
+    init: RequestInit | undefined,
+    ms: number,
+    controller: AbortController,
+  ): Promise<Response> {
+    const { signal, method, ...options } = init || {};
+    if (signal) signal.addEventListener('abort', () => controller.abort());
+
+    const timeout = setTimeout(() => controller.abort(), ms);
+
+    const isReadableBody =
+      ((globalThis as any).ReadableStream && options.body instanceof (globalThis as any).ReadableStream) ||
+      (typeof options.body === 'object' && options.body !== null && Symbol.asyncIterator in options.body);
+
+    const fetchOptions: RequestInit = {
+      signal: controller.signal as any,
+      ...(isReadableBody ? { duplex: 'half' } : {}),
+      method: 'GET',
+      ...options,
+    };
+    if (method) {
+      // Custom methods like 'patch' need to be uppercased
+      // See https://github.com/nodejs/undici/issues/2294
+      fetchOptions.method = method.toUpperCase();
     }
 
     try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-      })
-
-      let responseData: any = {}
-      try {
-        responseData = await response.json()
-      } catch (jsonError) {
-        // If JSON parsing fails, use empty object
-        responseData = {}
-      }
-
-      if (!response.ok) {
-        return {
-          error: (responseData && typeof responseData === 'object' && responseData.error) || `HTTP ${response.status}: ${response.statusText}`
-        }
-      }
-
-      return {
-        data: responseData as T
-      }
-    } catch (error) {
-      return {
-        error: error instanceof Error ? error.message : 'Network error occurred'
-      }
+      // use undefined this binding; fetch errors if bound to something else in browser/cloudflare
+      return await this.fetch.call(undefined, url, fetchOptions);
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
-  /**
-   * Process React component in email request
-   * Converts React component to HTML and adds it to the request
-   */
-  private async processReactComponent(params: PostEmailsRequest): Promise<PostEmailsRequest> {
-    // If no React component provided, return params as-is
-    if (!params.react) {
-      return params
-    }
+  private async shouldRetry(response: Response): Promise<boolean> {
+    // Note this is not a standard header.
+    const shouldRetryHeader = response.headers.get('x-should-retry');
 
-    // Check if React rendering is supported
-    if (!isReactRenderingSupported()) {
-      throw new Error(getReactRenderingError())
-    }
+    // If the server explicitly says whether or not to retry, obey.
+    if (shouldRetryHeader === 'true') return true;
+    if (shouldRetryHeader === 'false') return false;
 
-    try {
-      // Render React component to HTML
-      const renderedHtml = renderReactToHtml(params.react)
-      
-      // Create new params object with rendered HTML
-      const processedParams: PostEmailsRequest = {
-        ...params,
-        html: renderedHtml, // Set the rendered HTML
-        // Remove the react property as it's not sent to the API
-        react: undefined
-      }
+    // Retry on request timeouts.
+    if (response.status === 408) return true;
 
-      // Remove the react property completely
-      delete processedParams.react
+    // Retry on lock timeouts.
+    if (response.status === 409) return true;
 
-      return processedParams
-    } catch (error) {
-      throw new Error(`Failed to process React component: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    }
+    // Retry on rate limits.
+    if (response.status === 429) return true;
+
+    // Retry internal errors.
+    if (response.status >= 500) return true;
+
+    return false;
   }
 
-  /**
-   * Mail API - for managing received emails (inbound)
-   * @deprecated Use `email.received` instead. This will be removed in a future version.
-   */
-  mail = {
-    /**
-     * List all emails in the mailbox
-     * @deprecated Use `email.received.list()` instead
-     */
-    list: async (params?: GetMailRequest): Promise<ApiResponse<GetMailResponse>> => {
-      console.warn('⚠️ mail.list() is deprecated. Use email.received.list() instead.')
-      const queryString = params ? buildQueryString(params) : ''
-      return this.request<GetMailResponse>(`/mail${queryString}`)
-    },
+  private async retryRequest(
+    options: FinalRequestOptions,
+    retriesRemaining: number,
+    requestLogID: string,
+    responseHeaders?: Headers | undefined,
+  ): Promise<APIResponseProps> {
+    let timeoutMillis: number | undefined;
 
-    /**
-     * Get a specific email by ID
-     * @deprecated Use `email.received.get()` instead
-     */
-    get: async (id: string): Promise<ApiResponse<GetMailByIdResponse>> => {
-      console.warn('⚠️ mail.get() is deprecated. Use email.received.get() instead.')
-      return this.request<GetMailByIdResponse>(`/mail/${id}`)
-    },
-
-    /**
-     * Get email thread/conversation by email ID
-     * @deprecated Use `email.received.thread()` instead
-     */
-    thread: async (id: string): Promise<ApiResponse<any>> => {
-      console.warn('⚠️ mail.thread() is deprecated. Use email.received.thread() instead.')
-      return this.request<any>(`/mail/${id}/thread`)
-    },
-
-    /**
-     * Mark email as read
-     * @deprecated Use `email.received.markRead()` instead
-     */
-    markRead: async (id: string): Promise<ApiResponse<any>> => {
-      console.warn('⚠️ mail.markRead() is deprecated. Use email.received.markRead() instead.')
-      return this.request<any>(`/mail/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ isRead: true }),
-      })
-    },
-
-    /**
-     * Mark email as unread
-     * @deprecated Use `email.received.markUnread()` instead
-     */
-    markUnread: async (id: string): Promise<ApiResponse<any>> => {
-      console.warn('⚠️ mail.markUnread() is deprecated. Use email.received.markUnread() instead.')
-      return this.request<any>(`/mail/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ isRead: false }),
-      })
-    },
-
-    /**
-     * Archive email
-     * @deprecated Use `email.received.archive()` instead
-     */
-    archive: async (id: string): Promise<ApiResponse<any>> => {
-      console.warn('⚠️ mail.archive() is deprecated. Use email.received.archive() instead.')
-      return this.request<any>(`/mail/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ isArchived: true }),
-      })
-    },
-
-    /**
-     * Unarchive email
-     * @deprecated Use `email.received.unarchive()` instead
-     */
-    unarchive: async (id: string): Promise<ApiResponse<any>> => {
-      console.warn('⚠️ mail.unarchive() is deprecated. Use email.received.unarchive() instead.')
-      return this.request<any>(`/mail/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ isArchived: false }),
-      })
-    },
-
-    /**
-     * Reply to an email
-     * @deprecated Use `email.received.reply()` instead
-     */
-    reply: async (params: PostMailRequest): Promise<ApiResponse<PostMailResponse>> => {
-      console.warn('⚠️ mail.reply() is deprecated. Use email.received.reply() instead.')
-      return this.request<PostMailResponse>('/mail', {
-        method: 'POST',
-        body: JSON.stringify(params),
-      })
-    },
-
-    /**
-     * Bulk operations on multiple emails
-     * @deprecated Use `email.received.bulk()` instead
-     */
-    bulk: async (emailIds: string[], updates: { isRead?: boolean; isArchived?: boolean }): Promise<ApiResponse<any>> => {
-      console.warn('⚠️ mail.bulk() is deprecated. Use email.received.bulk() instead.')
-      return this.request<any>('/mail/bulk', {
-        method: 'POST',
-        body: JSON.stringify({ emailIds, updates }),
-      })
-    },
-  }
-
-  /**
-   * Email API - Unified interface for managing all emails (received and sent)
-   */
-  email = {
-    /**
-     * Send an email with optional attachments
-     * Supports both remote files (path) and base64 content
-     * Also supports React components for email content
-     * If scheduled_at is provided, the email will be scheduled for future delivery
-     */
-    send: async (params: PostEmailsRequest, options?: IdempotencyOptions): Promise<ApiResponse<PostEmailsResponse>> => {
-      // Process React component if provided
-      const processedParams = await this.processReactComponent(params)
-      
-      // Determine endpoint based on whether email is scheduled
-      const endpoint = processedParams.scheduled_at ? '/emails/schedule' : '/emails'
-      
-      // Build headers with optional idempotency key
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      }
-      
-      if (options?.idempotencyKey) {
-        headers['Idempotency-Key'] = options.idempotencyKey
-      }
-      
-      return this.request<PostEmailsResponse>(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(processedParams),
-      })
-    },
-
-    /**
-     * Get an email by ID - works for both received and sent emails
-     * For received emails, use received.get() for better type safety
-     * For sent emails, use sent.get() for better type safety
-     */
-    get: async (id: string): Promise<ApiResponse<GetMailByIdResponse | GetEmailByIdResponse>> => {
-      // First try to get as received email
-      try {
-        const receivedEmail = await this.request<GetMailByIdResponse>(`/mail/${id}`)
-        if (receivedEmail.data) {
-          return receivedEmail
-        }
-      } catch (error) {
-        // If that fails, try as sent email
-        return this.request<GetEmailByIdResponse>(`/emails/${id}`)
-      }
-      
-      // If we get here, try sent email as fallback
-      return this.request<GetEmailByIdResponse>(`/emails/${id}`)
-    },
-
-    /**
-     * Received emails API - for managing inbound emails
-     */
-    received: {
-      /**
-       * List all received emails in the mailbox
-       */
-      list: async (params?: GetMailRequest): Promise<ApiResponse<GetMailResponse>> => {
-        const queryString = params ? buildQueryString(params) : ''
-        return this.request<GetMailResponse>(`/mail${queryString}`)
-      },
-
-      /**
-       * Get a specific received email by ID
-       */
-      get: async (id: string): Promise<ApiResponse<GetMailByIdResponse>> => {
-        return this.request<GetMailByIdResponse>(`/mail/${id}`)
-      },
-
-      /**
-       * Get email thread/conversation by email ID
-       */
-      thread: async (id: string): Promise<ApiResponse<any>> => {
-        return this.request<any>(`/mail/${id}/thread`)
-      },
-
-      /**
-       * Mark received email as read
-       */
-      markRead: async (id: string): Promise<ApiResponse<any>> => {
-        return this.request<any>(`/mail/${id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ isRead: true }),
-        })
-      },
-
-      /**
-       * Mark received email as unread
-       */
-      markUnread: async (id: string): Promise<ApiResponse<any>> => {
-        return this.request<any>(`/mail/${id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ isRead: false }),
-        })
-      },
-
-      /**
-       * Archive received email
-       */
-      archive: async (id: string): Promise<ApiResponse<any>> => {
-        return this.request<any>(`/mail/${id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ isArchived: true }),
-        })
-      },
-
-      /**
-       * Unarchive received email
-       */
-      unarchive: async (id: string): Promise<ApiResponse<any>> => {
-        return this.request<any>(`/mail/${id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ isArchived: false }),
-        })
-      },
-
-      /**
-       * Reply to a received email
-       */
-      reply: async (params: PostMailRequest): Promise<ApiResponse<PostMailResponse>> => {
-        return this.request<PostMailResponse>('/mail', {
-          method: 'POST',
-          body: JSON.stringify(params),
-        })
-      },
-
-      /**
-       * Bulk operations on multiple received emails
-       */
-      bulk: async (emailIds: string[], updates: { isRead?: boolean; isArchived?: boolean }): Promise<ApiResponse<any>> => {
-        return this.request<any>('/mail/bulk', {
-          method: 'POST',
-          body: JSON.stringify({ emailIds, updates }),
-        })
-      },
-    },
-
-    /**
-     * Sent emails API - for managing outbound emails
-     */
-    sent: {
-      /**
-       * Get a sent email by ID
-       */
-      get: async (id: string): Promise<ApiResponse<GetEmailByIdResponse>> => {
-        return this.request<GetEmailByIdResponse>(`/emails/${id}`)
-      },
-
-      /**
-       * Reply to a sent email by ID with optional attachments
-       */
-      reply: async (id: string, params: PostEmailReplyRequest, options?: IdempotencyOptions): Promise<ApiResponse<PostEmailReplyResponse>> => {
-        // Build headers with optional idempotency key
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json'
-        }
-        
-        if (options?.idempotencyKey) {
-          headers['Idempotency-Key'] = options.idempotencyKey
-        }
-        
-        return this.request<PostEmailReplyResponse>(`/emails/${id}/reply`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(params),
-        })
-      },
-
-      /**
-       * List scheduled emails with filtering and pagination
-       */
-      listScheduled: async (params?: GetScheduledEmailsRequest): Promise<ApiResponse<GetScheduledEmailsResponse>> => {
-        const queryString = params ? buildQueryString(params) : ''
-        return this.request<GetScheduledEmailsResponse>(`/emails/schedule${queryString}`)
-      },
-
-      /**
-       * Get details of a specific scheduled email
-       */
-      getScheduled: async (id: string): Promise<ApiResponse<GetScheduledEmailResponse>> => {
-        return this.request<GetScheduledEmailResponse>(`/emails/schedule/${id}`)
-      },
-
-      /**
-       * Cancel a scheduled email (only works if status is 'scheduled')
-       */
-      cancel: async (id: string): Promise<ApiResponse<DeleteScheduledEmailResponse>> => {
-        return this.request<DeleteScheduledEmailResponse>(`/emails/schedule/${id}`, {
-          method: 'DELETE',
-        })
-      },
-    },
-
-    /**
-     * Reply to an email by ID with optional attachments (DEPRECATED - use sent.reply() instead)
-     * @deprecated Use `sent.reply()` instead
-     */
-    reply: async (id: string, params: PostEmailReplyRequest, options?: IdempotencyOptions): Promise<ApiResponse<PostEmailReplyResponse>> => {
-      console.warn('⚠️ email.reply() is deprecated. Use email.sent.reply() instead.')
-      // Build headers with optional idempotency key
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      }
-      
-      if (options?.idempotencyKey) {
-        headers['Idempotency-Key'] = options.idempotencyKey
-      }
-      
-      return this.request<PostEmailReplyResponse>(`/emails/${id}/reply`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(params),
-      })
-    },
-
-    /**
-     * Schedule an email to be sent at a future time
-     * Supports both ISO 8601 dates and natural language (e.g., "in 1 hour", "tomorrow at 9am")
-     * @deprecated This method will remain at the top level for backward compatibility
-     */
-    schedule: async (params: PostScheduleEmailRequest, options?: IdempotencyOptions): Promise<ApiResponse<PostScheduleEmailResponse>> => {
-      // Process React component if provided
-      const processedParams = await this.processReactComponent(params as any)
-      
-      // Build headers with optional idempotency key
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      }
-      
-      if (options?.idempotencyKey) {
-        headers['Idempotency-Key'] = options.idempotencyKey
-      }
-      
-      return this.request<PostScheduleEmailResponse>('/emails/schedule', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(processedParams),
-      })
-    },
-
-    /**
-     * List scheduled emails with filtering and pagination
-     * @deprecated Use sent.listScheduled() instead
-     */
-    listScheduled: async (params?: GetScheduledEmailsRequest): Promise<ApiResponse<GetScheduledEmailsResponse>> => {
-      console.warn('⚠️ email.listScheduled() is deprecated. Use email.sent.listScheduled() instead.')
-      const queryString = params ? buildQueryString(params) : ''
-      return this.request<GetScheduledEmailsResponse>(`/emails/schedule${queryString}`)
-    },
-
-    /**
-     * Get details of a specific scheduled email
-     * @deprecated Use sent.getScheduled() instead
-     */
-    getScheduled: async (id: string): Promise<ApiResponse<GetScheduledEmailResponse>> => {
-      console.warn('⚠️ email.getScheduled() is deprecated. Use email.sent.getScheduled() instead.')
-      return this.request<GetScheduledEmailResponse>(`/emails/schedule/${id}`)
-    },
-
-    /**
-     * Cancel a scheduled email (only works if status is 'scheduled')
-     * @deprecated Use sent.cancel() instead
-     */
-    cancel: async (id: string): Promise<ApiResponse<DeleteScheduledEmailResponse>> => {
-      console.warn('⚠️ email.cancel() is deprecated. Use email.sent.cancel() instead.')
-      return this.request<DeleteScheduledEmailResponse>(`/emails/schedule/${id}`, {
-        method: 'DELETE',
-      })
-    },
-
-    /**
-     * @deprecated Use sent.cancel() instead
-     * Cancel a scheduled email (only works if status is 'scheduled')
-     */
-    cancelScheduled: async (id: string): Promise<ApiResponse<DeleteScheduledEmailResponse>> => {
-      console.warn('⚠️ email.cancelScheduled() is deprecated. Use email.sent.cancel() instead.')
-      return this.request<DeleteScheduledEmailResponse>(`/emails/schedule/${id}`, {
-        method: 'DELETE',
-      })
-    },
-
-    /**
-     * Email Address Management - nested under email
-     */
-    address: {
-      /**
-       * Create a new email address
-       */
-      create: async (params: PostEmailAddressesRequest): Promise<ApiResponse<PostEmailAddressesResponse>> => {
-        return this.request<PostEmailAddressesResponse>('/email-addresses', {
-          method: 'POST',
-          body: JSON.stringify(params),
-        })
-      },
-
-      /**
-       * List all email addresses
-       */
-      list: async (params?: GetEmailAddressesRequest): Promise<ApiResponse<GetEmailAddressesResponse>> => {
-        const queryString = params ? buildQueryString(params) : ''
-        return this.request<GetEmailAddressesResponse>(`/email-addresses${queryString}`)
-      },
-
-      /**
-       * Get a specific email address by ID
-       */
-      get: async (id: string): Promise<ApiResponse<GetEmailAddressByIdResponse>> => {
-        return this.request<GetEmailAddressByIdResponse>(`/email-addresses/${id}`)
-      },
-
-      /**
-       * Update an email address
-       */
-      update: async (id: string, params: PutEmailAddressByIdRequest): Promise<ApiResponse<PutEmailAddressByIdResponse>> => {
-        return this.request<PutEmailAddressByIdResponse>(`/email-addresses/${id}`, {
-          method: 'PUT',
-          body: JSON.stringify(params),
-        })
-      },
-
-      /**
-       * Delete an email address
-       */
-      delete: async (id: string): Promise<ApiResponse<DeleteEmailAddressByIdResponse>> => {
-        return this.request<DeleteEmailAddressByIdResponse>(`/email-addresses/${id}`, {
-          method: 'DELETE',
-        })
-      },
-    }
-  }
-
-  /**
-   * Domains API - for managing email domains
-   */
-  domain = {
-    /**
-     * Create a new domain
-     */
-    create: async (params: PostDomainsRequest): Promise<ApiResponse<PostDomainsResponse>> => {
-      return this.request<PostDomainsResponse>('/domains', {
-        method: 'POST',
-        body: JSON.stringify(params),
-      })
-    },
-
-    /**
-     * List all domains
-     */
-    list: async (params?: GetDomainsRequest): Promise<ApiResponse<GetDomainsResponse>> => {
-      const queryString = params ? buildQueryString(params) : ''
-      return this.request<GetDomainsResponse>(`/domains${queryString}`)
-    },
-
-    /**
-     * Get a specific domain by ID
-     */
-    get: async (id: string): Promise<ApiResponse<GetDomainByIdResponse>> => {
-      return this.request<GetDomainByIdResponse>(`/domains/${id}`)
-    },
-
-    /**
-     * Update domain settings (catch-all configuration)
-     */
-    update: async (id: string, params: PutDomainByIdRequest): Promise<ApiResponse<PutDomainByIdResponse>> => {
-      return this.request<PutDomainByIdResponse>(`/domains/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(params),
-      })
-    },
-
-    /**
-     * Delete a domain
-     */
-    delete: async (id: string): Promise<ApiResponse<any>> => {
-      return this.request<any>(`/domains/${id}`, {
-        method: 'DELETE',
-      })
-    },
-
-    /**
-     * Initiate domain verification
-     */
-    verify: async (id: string): Promise<ApiResponse<any>> => {
-      return this.request<any>(`/domains/${id}/auth`, {
-        method: 'POST',
-      })
-    },
-
-    /**
-     * Get DNS records required for domain verification
-     */
-    getDnsRecords: async (id: string): Promise<ApiResponse<any>> => {
-      return this.request<any>(`/domains/${id}/dns-records`)
-    },
-
-    /**
-     * Check domain verification status
-     */
-    checkStatus: async (id: string): Promise<ApiResponse<any>> => {
-      return this.request<any>(`/domains/${id}/auth`, {
-        method: 'PATCH',
-      })
-    },
-  }
-
-  /**
-   * Endpoints API - for managing webhook and email endpoints
-   */
-  endpoint = {
-    /**
-     * Create a new endpoint
-     */
-    create: async (params: PostEndpointsRequest): Promise<ApiResponse<PostEndpointsResponse>> => {
-      return this.request<PostEndpointsResponse>('/endpoints', {
-        method: 'POST',
-        body: JSON.stringify(params),
-      })
-    },
-
-    /**
-     * List all endpoints
-     */
-    list: async (params?: GetEndpointsRequest): Promise<ApiResponse<GetEndpointsResponse>> => {
-      const queryString = params ? buildQueryString(params) : ''
-      return this.request<GetEndpointsResponse>(`/endpoints${queryString}`)
-    },
-
-    /**
-     * Get a specific endpoint by ID
-     */
-    get: async (id: string): Promise<ApiResponse<GetEndpointByIdResponse>> => {
-      return this.request<GetEndpointByIdResponse>(`/endpoints/${id}`)
-    },
-
-    /**
-     * Update an endpoint
-     */
-    update: async (id: string, params: PutEndpointByIdRequest): Promise<ApiResponse<PutEndpointByIdResponse>> => {
-      return this.request<PutEndpointByIdResponse>(`/endpoints/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(params),
-      })
-    },
-
-    /**
-     * Delete an endpoint
-     */
-    delete: async (id: string): Promise<ApiResponse<DeleteEndpointByIdResponse>> => {
-      return this.request<DeleteEndpointByIdResponse>(`/endpoints/${id}`, {
-        method: 'DELETE',
-      })
-    },
-
-    /**
-     * Test endpoint connectivity
-     */
-    test: async (id: string): Promise<ApiResponse<any>> => {
-      return this.request<any>(`/endpoints/${id}/test`, {
-        method: 'POST',
-      })
-    },
-  }
-
-  /**
-   * Convenience Methods - Simplified Common Operations
-   */
-
-  /**
-   * Quick text reply to an email
-   */
-  quickReply = async (emailId: string, message: string, from: string, options?: IdempotencyOptions): Promise<ApiResponse<PostEmailReplyResponse>> => {
-    return this.email.reply(emailId, {
-      from,
-      text: message
-    }, options)
-  }
-
-  /**
-   * One-step domain setup with webhook
-   */
-  setupDomain = async (domain: string, webhookUrl?: string): Promise<ApiResponse<any>> => {
-    // First create the domain
-    const domainResult = await this.domain.create({ domain: domain })
-    if (domainResult.error) {
-      return domainResult
-    }
-
-    // If webhook URL provided, create an endpoint
-    if (webhookUrl && domainResult.data) {
-      const endpointResult = await this.endpoint.create({
-        name: `${domain} Webhook`,
-        type: 'webhook',
-        config: { 
-          url: webhookUrl,
-          timeout: 30000,
-          retryAttempts: 3
-        }
-      })
-      
-      return {
-        data: {
-          domain: domainResult.data,
-          endpoint: endpointResult.data
-        }
+    // Note the `retry-after-ms` header may not be standard, but is a good idea and we'd like proactive support for it.
+    const retryAfterMillisHeader = responseHeaders?.get('retry-after-ms');
+    if (retryAfterMillisHeader) {
+      const timeoutMs = parseFloat(retryAfterMillisHeader);
+      if (!Number.isNaN(timeoutMs)) {
+        timeoutMillis = timeoutMs;
       }
     }
 
-    return domainResult
-  }
-
-  /**
-   * Simple email forwarding setup
-   */
-  createForwarder = async (from: string, to: string): Promise<ApiResponse<any>> => {
-    return this.endpoint.create({
-      name: `Forward ${from} to ${to}`,
-      type: 'email',
-      config: { 
-        email: to
-      }
-    })
-  }
-
-  /**
-   * Quick scheduled email reminder
-   */
-  scheduleReminder = async (to: string, subject: string, when: string, from: string, options?: IdempotencyOptions): Promise<ApiResponse<PostScheduleEmailResponse>> => {
-    return this.email.schedule({
-      from,
-      to,
-      subject,
-      text: `Reminder: ${subject}`,
-      scheduled_at: when
-    }, options)
-  }
-
-  /**
-   * Legacy compatibility methods
-   */
-
-  /**
-   * @deprecated Use email.send() instead
-   * Legacy send method for backwards compatibility
-   */
-  send = async (params: PostEmailsRequest, options?: IdempotencyOptions): Promise<ApiResponse<PostEmailsResponse>> => {
-    return this.email.send(params, options)
-  }
-
-  /**
-   * Streamlined reply method for webhook handlers
-   * Works directly with webhook email objects for better DX
-   * 
-   * Usage:
-   * - const { data, error } = await inbound.reply("email-id", { from: "support@domain.com", text: "Thanks!" })
-   * - const { data, error } = await inbound.reply(email, { from: "support@domain.com", text: "Thanks!" })
-   */
-  reply = async (
-    emailOrId: InboundWebhookEmail | string,
-    replyParams: PostEmailReplyRequest,
-    options?: IdempotencyOptions
-  ): Promise<ApiResponse<PostEmailReplyResponse>> => {
-    // Determine email ID
-    const emailId = typeof emailOrId === 'string' ? emailOrId : emailOrId.id
-
-    // Validate that we have a from address
-    if (!replyParams.from) {
-      return {
-        error: 'Reply requires a "from" address.'
+    // About the Retry-After header: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After
+    const retryAfterHeader = responseHeaders?.get('retry-after');
+    if (retryAfterHeader && !timeoutMillis) {
+      const timeoutSeconds = parseFloat(retryAfterHeader);
+      if (!Number.isNaN(timeoutSeconds)) {
+        timeoutMillis = timeoutSeconds * 1000;
+      } else {
+        timeoutMillis = Date.parse(retryAfterHeader) - Date.now();
       }
     }
 
-    return this.email.reply(emailId, replyParams, options)
+    // If the API asks us to wait a certain amount of time (and it's a reasonable amount),
+    // just do what it says, but otherwise calculate a default
+    if (!(timeoutMillis && 0 <= timeoutMillis && timeoutMillis < 60 * 1000)) {
+      const maxRetries = options.maxRetries ?? this.maxRetries;
+      timeoutMillis = this.calculateDefaultRetryTimeoutMillis(retriesRemaining, maxRetries);
+    }
+    await sleep(timeoutMillis);
+
+    return this.makeRequest(options, retriesRemaining - 1, requestLogID);
   }
 
-  // Legacy aliases for backwards compatibility
-  domains = this.domain
-  endpoints = this.endpoint
-  emailAddresses = this.email.address
-  emails = this.email
-} 
+  private calculateDefaultRetryTimeoutMillis(retriesRemaining: number, maxRetries: number): number {
+    const initialRetryDelay = 0.5;
+    const maxRetryDelay = 8.0;
+
+    const numRetries = maxRetries - retriesRemaining;
+
+    // Apply exponential backoff, but not more than the max.
+    const sleepSeconds = Math.min(initialRetryDelay * Math.pow(2, numRetries), maxRetryDelay);
+
+    // Apply some jitter, take up to at most 25 percent of the retry time.
+    const jitter = 1 - Math.random() * 0.25;
+
+    return sleepSeconds * jitter * 1000;
+  }
+
+  async buildRequest(
+    inputOptions: FinalRequestOptions,
+    { retryCount = 0 }: { retryCount?: number } = {},
+  ): Promise<{ req: FinalizedRequestInit; url: string; timeout: number }> {
+    const options = { ...inputOptions };
+    const { method, path, query, defaultBaseURL } = options;
+
+    const url = this.buildURL(path!, query as Record<string, unknown>, defaultBaseURL);
+    if ('timeout' in options) validatePositiveInteger('timeout', options.timeout);
+    options.timeout = options.timeout ?? this.timeout;
+    const { bodyHeaders, body } = this.buildBody({ options });
+    const reqHeaders = await this.buildHeaders({ options: inputOptions, method, bodyHeaders, retryCount });
+
+    const req: FinalizedRequestInit = {
+      method,
+      headers: reqHeaders,
+      ...(options.signal && { signal: options.signal }),
+      ...((globalThis as any).ReadableStream &&
+        body instanceof (globalThis as any).ReadableStream && { duplex: 'half' }),
+      ...(body && { body }),
+      ...((this.fetchOptions as any) ?? {}),
+      ...((options.fetchOptions as any) ?? {}),
+    };
+
+    return { req, url, timeout: options.timeout };
+  }
+
+  private async buildHeaders({
+    options,
+    method,
+    bodyHeaders,
+    retryCount,
+  }: {
+    options: FinalRequestOptions;
+    method: HTTPMethod;
+    bodyHeaders: HeadersLike;
+    retryCount: number;
+  }): Promise<Headers> {
+    let idempotencyHeaders: HeadersLike = {};
+    if (this.idempotencyHeader && method !== 'get') {
+      if (!options.idempotencyKey) options.idempotencyKey = this.defaultIdempotencyKey();
+      idempotencyHeaders[this.idempotencyHeader] = options.idempotencyKey;
+    }
+
+    const headers = buildHeaders([
+      idempotencyHeaders,
+      {
+        Accept: 'application/json',
+        'User-Agent': this.getUserAgent(),
+        'X-Stainless-Retry-Count': String(retryCount),
+        ...(options.timeout ? { 'X-Stainless-Timeout': String(Math.trunc(options.timeout / 1000)) } : {}),
+        ...getPlatformHeaders(),
+      },
+      await this.authHeaders(options),
+      this._options.defaultHeaders,
+      bodyHeaders,
+      options.headers,
+    ]);
+
+    this.validateHeaders(headers);
+
+    return headers.values;
+  }
+
+  private buildBody({ options: { body, headers: rawHeaders } }: { options: FinalRequestOptions }): {
+    bodyHeaders: HeadersLike;
+    body: BodyInit | undefined;
+  } {
+    if (!body) {
+      return { bodyHeaders: undefined, body: undefined };
+    }
+    const headers = buildHeaders([rawHeaders]);
+    if (
+      // Pass raw type verbatim
+      ArrayBuffer.isView(body) ||
+      body instanceof ArrayBuffer ||
+      body instanceof DataView ||
+      (typeof body === 'string' &&
+        // Preserve legacy string encoding behavior for now
+        headers.values.has('content-type')) ||
+      // `Blob` is superset of `File`
+      ((globalThis as any).Blob && body instanceof (globalThis as any).Blob) ||
+      // `FormData` -> `multipart/form-data`
+      body instanceof FormData ||
+      // `URLSearchParams` -> `application/x-www-form-urlencoded`
+      body instanceof URLSearchParams ||
+      // Send chunked stream (each chunk has own `length`)
+      ((globalThis as any).ReadableStream && body instanceof (globalThis as any).ReadableStream)
+    ) {
+      return { bodyHeaders: undefined, body: body as BodyInit };
+    } else if (
+      typeof body === 'object' &&
+      (Symbol.asyncIterator in body ||
+        (Symbol.iterator in body && 'next' in body && typeof body.next === 'function'))
+    ) {
+      return { bodyHeaders: undefined, body: Shims.ReadableStreamFrom(body as AsyncIterable<Uint8Array>) };
+    } else {
+      return this.#encoder({ body, headers });
+    }
+  }
+
+  static Inbound = this;
+  static DEFAULT_TIMEOUT = 60000; // 1 minute
+
+  static InboundError = Errors.InboundError;
+  static APIError = Errors.APIError;
+  static APIConnectionError = Errors.APIConnectionError;
+  static APIConnectionTimeoutError = Errors.APIConnectionTimeoutError;
+  static APIUserAbortError = Errors.APIUserAbortError;
+  static NotFoundError = Errors.NotFoundError;
+  static ConflictError = Errors.ConflictError;
+  static RateLimitError = Errors.RateLimitError;
+  static BadRequestError = Errors.BadRequestError;
+  static AuthenticationError = Errors.AuthenticationError;
+  static InternalServerError = Errors.InternalServerError;
+  static PermissionDeniedError = Errors.PermissionDeniedError;
+  static UnprocessableEntityError = Errors.UnprocessableEntityError;
+
+  static toFile = Uploads.toFile;
+
+  v2: API.V2 = new API.V2(this);
+}
+
+Inbound.V2 = V2;
+
+export declare namespace Inbound {
+  export type RequestOptions = Opts.RequestOptions;
+
+  export { V2 as V2 };
+}
