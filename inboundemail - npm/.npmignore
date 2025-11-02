@@ -1,0 +1,19 @@
+# Development files
+*.log
+npm-debug.log*
+.DS_Store
+.env
+.env.local
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+
+

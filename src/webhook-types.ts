@@ -103,6 +103,10 @@ export interface InboundWebhookEmail {
   subject: string | null
   receivedAt: Date | string
   
+  // Threading information (v4.3.1+)
+  threadId: string | null
+  threadPosition: number | null
+  
   // Full parsed email data structure
   parsedData: InboundParsedEmailData
   
