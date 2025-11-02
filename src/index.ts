@@ -1,7 +1,7 @@
 /**
  * @inboundemail/sdk
  * Official SDK for Inbound Email API
- * Version 4.0.0 - Hierarchical API structure with email.address.* methods
+ * Version 4.4.0 - Added webhook verification utilities
  */
 
 // Main SDK client
@@ -47,6 +47,12 @@ export {
   getRecipientAddresses
 } from './webhook-types'
 
+// Webhook verification utilities
+export { 
+  verifyWebhook,
+  verifyWebhookFromHeaders
+} from './webhook-verification'
+
 // Webhook types for incoming requests
 export * from './webhook-types'
 
@@ -54,7 +60,7 @@ export * from './webhook-types'
 export * from './utils'
 
 // Version
-export const VERSION = '4.0.0'
+export const VERSION = '4.4.0'
 
 // Default export for convenience
 export { InboundEmailClient as default } from './client' 

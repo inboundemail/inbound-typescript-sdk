@@ -110,6 +110,7 @@ export interface WebhookConfig {
   timeout: number
   retryAttempts: number
   headers?: Record<string, string>
+  verificationToken?: string  // Verification token for webhook security
 }
 
 export interface EmailConfig {
