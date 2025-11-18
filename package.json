@@ -2,13 +2,13 @@
   "name": "inbound",
   "version": "0.0.1",
   "description": "The official TypeScript library for the Inbound API",
-  "author": "Inbound <>",
+  "author": "Inbound <support@inbound.new>",
   "types": "dist/index.d.ts",
   "main": "dist/index.js",
   "type": "commonjs",
   "repository": "github:stainless-sdks/inbound-typescript",
   "license": "Apache-2.0",
-  "packageManager": "yarn@1.22.22",
+  "packageManager": "pnpm@10.14.0",
   "files": [
     "**/*"
   ],
@@ -19,7 +19,7 @@
   "scripts": {
     "test": "./scripts/test",
     "build": "./scripts/build",
-    "prepublishOnly": "echo 'to publish, run yarn build && (cd dist; yarn publish)' && exit 1",
+    "prepublishOnly": "echo 'to publish, run pnpm build && (cd dist; pnpm publish)' && exit 1",
     "format": "./scripts/format",
     "prepare": "if ./scripts/utils/check-is-in-git-install.sh; then ./scripts/build && ./scripts/utils/git-swap.sh; fi",
     "tsn": "ts-node -r tsconfig-paths/register",

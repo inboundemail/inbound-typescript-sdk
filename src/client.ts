@@ -16,7 +16,19 @@ import * as Errors from './core/error';
 import * as Uploads from './core/uploads';
 import * as API from './resources/index';
 import { APIPromise } from './core/api-promise';
-import { V2, V2RetrieveParams } from './resources/v2/v2';
+import {
+  DomainCreateParams,
+  DomainCreateResponse,
+  DomainDeleteParams,
+  DomainDeleteResponse,
+  DomainListParams,
+  DomainListResponse,
+  DomainRetrieveParams,
+  DomainRetrieveResponse,
+  DomainUpdateParams,
+  DomainUpdateResponse,
+  Domains,
+} from './resources/domains';
 import { type Fetch } from './internal/builtin-types';
 import { HeadersLike, NullableHeaders, buildHeaders } from './internal/headers';
 import { FinalRequestOptions, RequestOptions } from './internal/request-options';
@@ -32,7 +44,7 @@ import { isEmptyObj } from './internal/utils/values';
 
 export interface ClientOptions {
   /**
-   * Defaults to process.env['INBOUND_API_KEY'].
+   * API key authentication. Use your API key as the bearer token.
    */
   apiKey?: string | null | undefined;
 
@@ -127,7 +139,7 @@ export class Inbound {
    * API Client for interfacing with the Inbound API.
    *
    * @param {string | null | undefined} [opts.apiKey=process.env['INBOUND_API_KEY'] ?? null]
-   * @param {string} [opts.baseURL=process.env['INBOUND_BASE_URL'] ?? https://api.example.com] - Override the default base URL for the API.
+   * @param {string} [opts.baseURL=process.env['INBOUND_BASE_URL'] ?? /api/v3] - Override the default base URL for the API.
    * @param {number} [opts.timeout=1 minute] - The maximum amount of time (in milliseconds) the client will wait for a response before timing out.
    * @param {MergedRequestInit} [opts.fetchOptions] - Additional `RequestInit` options to be passed to `fetch` calls.
    * @param {Fetch} [opts.fetch] - Specify a custom `fetch` function implementation.
@@ -143,7 +155,7 @@ export class Inbound {
     const options: ClientOptions = {
       apiKey,
       ...opts,
-      baseURL: baseURL || `https://api.example.com`,
+      baseURL: baseURL || `/api/v3`,
     };
 
     this.baseURL = options.baseURL!;
@@ -189,7 +201,7 @@ export class Inbound {
    * Check whether the base URL is set to its default.
    */
   #baseURLOverridden(): boolean {
-    return this.baseURL !== 'https://api.example.com';
+    return this.baseURL !== '/api/v3';
   }
 
   protected defaultQuery(): Record<string, string | undefined> | undefined {
@@ -720,13 +732,25 @@ export class Inbound {
 
   static toFile = Uploads.toFile;
 
-  v2: API.V2 = new API.V2(this);
+  domains: API.Domains = new API.Domains(this);
 }
 
-Inbound.V2 = V2;
+Inbound.Domains = Domains;
 
 export declare namespace Inbound {
   export type RequestOptions = Opts.RequestOptions;
 
-  export { V2 as V2, type V2RetrieveParams as V2RetrieveParams };
+  export {
+    Domains as Domains,
+    type DomainCreateResponse as DomainCreateResponse,
+    type DomainRetrieveResponse as DomainRetrieveResponse,
+    type DomainUpdateResponse as DomainUpdateResponse,
+    type DomainListResponse as DomainListResponse,
+    type DomainDeleteResponse as DomainDeleteResponse,
+    type DomainCreateParams as DomainCreateParams,
+    type DomainRetrieveParams as DomainRetrieveParams,
+    type DomainUpdateParams as DomainUpdateParams,
+    type DomainListParams as DomainListParams,
+    type DomainDeleteParams as DomainDeleteParams,
+  };
 }
