@@ -1,23 +1,12 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { APIResource } from '../../core/resource';
-import { APIPromise } from '../../core/api-promise';
-import { RequestOptions } from '../../internal/request-options';
-import { maybeMultipartFormRequestOptions } from '../../internal/uploads';
-import { path } from '../../internal/utils/path';
+import { APIResource } from '../core/resource';
+import { APIPromise } from '../core/api-promise';
+import { RequestOptions } from '../internal/request-options';
+import { maybeMultipartFormRequestOptions } from '../internal/uploads';
+import { path } from '../internal/utils/path';
 
 export class Emails extends APIResource {
-  /**
-   * Send an email immediately or schedule it for later using the scheduled_at
-   * parameter. Supports HTML/text content, attachments, and custom headers.
-   */
-  create(body: EmailCreateParams, options?: RequestOptions): APIPromise<EmailCreateResponse> {
-    return this._client.post(
-      '/api/e2/emails',
-      maybeMultipartFormRequestOptions({ body, ...options }, this._client),
-    );
-  }
-
   /**
    * Retrieve a single email by ID. Works for sent, received, and scheduled emails.
    */
@@ -65,12 +54,17 @@ export class Emails extends APIResource {
       maybeMultipartFormRequestOptions({ body, ...options }, this._client),
     );
   }
-}
 
-export interface EmailCreateResponse {
-  id: string;
-
-  message_id?: string;
+  /**
+   * Send an email immediately or schedule it for later using the scheduled_at
+   * parameter. Supports HTML/text content, attachments, and custom headers.
+   */
+  send(body: EmailSendParams, options?: RequestOptions): APIPromise<EmailSendResponse> {
+    return this._client.post(
+      '/api/e2/emails',
+      maybeMultipartFormRequestOptions({ body, ...options }, this._client),
+    );
+  }
 }
 
 export interface EmailRetrieveResponse {
@@ -191,71 +185,10 @@ export interface EmailRetryResponse {
   delivery_id?: string;
 }
 
-export interface EmailCreateParams {
-  /**
-   * Sender email address
-   */
-  from: string;
+export interface EmailSendResponse {
+  id: string;
 
-  /**
-   * Email subject
-   */
-  subject: string;
-
-  /**
-   * Recipient email address(es)
-   */
-  to: string | Array<string>;
-
-  attachments?: Array<EmailCreateParams.Attachment>;
-
-  bcc?: string | Array<string>;
-
-  cc?: string | Array<string>;
-
-  headers?: unknown;
-
-  /**
-   * HTML content of the email
-   */
-  html?: string;
-
-  reply_to?: string | Array<string>;
-
-  /**
-   * ISO 8601 date or natural language for scheduling
-   */
-  scheduled_at?: string;
-
-  tags?: Array<EmailCreateParams.Tag>;
-
-  /**
-   * Plain text content of the email
-   */
-  text?: string;
-
-  /**
-   * Timezone for natural language parsing
-   */
-  timezone?: string;
-}
-
-export namespace EmailCreateParams {
-  export interface Attachment {
-    content: string;
-
-    filename: string;
-
-    content_type?: string;
-
-    path?: string;
-  }
-
-  export interface Tag {
-    name: string;
-
-    value: string;
-  }
+  message_id?: string;
 }
 
 export interface EmailListParams {
@@ -341,17 +274,84 @@ export interface EmailRetryParams {
   endpoint_id?: string;
 }
 
+export interface EmailSendParams {
+  /**
+   * Sender email address
+   */
+  from: string;
+
+  /**
+   * Email subject
+   */
+  subject: string;
+
+  /**
+   * Recipient email address(es)
+   */
+  to: string | Array<string>;
+
+  attachments?: Array<EmailSendParams.Attachment>;
+
+  bcc?: string | Array<string>;
+
+  cc?: string | Array<string>;
+
+  headers?: unknown;
+
+  /**
+   * HTML content of the email
+   */
+  html?: string;
+
+  reply_to?: string | Array<string>;
+
+  /**
+   * ISO 8601 date or natural language for scheduling
+   */
+  scheduled_at?: string;
+
+  tags?: Array<EmailSendParams.Tag>;
+
+  /**
+   * Plain text content of the email
+   */
+  text?: string;
+
+  /**
+   * Timezone for natural language parsing
+   */
+  timezone?: string;
+}
+
+export namespace EmailSendParams {
+  export interface Attachment {
+    content: string;
+
+    filename: string;
+
+    content_type?: string;
+
+    path?: string;
+  }
+
+  export interface Tag {
+    name: string;
+
+    value: string;
+  }
+}
+
 export declare namespace Emails {
   export {
-    type EmailCreateResponse as EmailCreateResponse,
     type EmailRetrieveResponse as EmailRetrieveResponse,
     type EmailListResponse as EmailListResponse,
     type EmailDeleteResponse as EmailDeleteResponse,
     type EmailReplyResponse as EmailReplyResponse,
     type EmailRetryResponse as EmailRetryResponse,
-    type EmailCreateParams as EmailCreateParams,
+    type EmailSendResponse as EmailSendResponse,
     type EmailListParams as EmailListParams,
     type EmailReplyParams as EmailReplyParams,
     type EmailRetryParams as EmailRetryParams,
+    type EmailSendParams as EmailSendParams,
   };
 }

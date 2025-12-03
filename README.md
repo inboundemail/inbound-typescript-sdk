@@ -29,7 +29,7 @@ const client = new Inbound({
   apiKey: process.env['INBOUND_API_KEY'], // This is the default and can be omitted
 });
 
-const domains = await client.e2.domains.list();
+const domains = await client.domains.list();
 
 console.log(domains.data);
 ```
@@ -46,7 +46,7 @@ const client = new Inbound({
   apiKey: process.env['INBOUND_API_KEY'], // This is the default and can be omitted
 });
 
-const domains: Inbound.E2.DomainListResponse = await client.e2.domains.list();
+const domains: Inbound.DomainListResponse = await client.domains.list();
 ```
 
 Documentation for each method, request param, and response field are available in docstrings and will appear on hover in most modern editors.
@@ -59,7 +59,7 @@ a subclass of `APIError` will be thrown:
 
 <!-- prettier-ignore -->
 ```ts
-const domains = await client.e2.domains.list().catch(async (err) => {
+const domains = await client.domains.list().catch(async (err) => {
   if (err instanceof Inbound.APIError) {
     console.log(err.status); // 400
     console.log(err.name); // BadRequestError
@@ -99,7 +99,7 @@ const client = new Inbound({
 });
 
 // Or, configure per-request:
-await client.e2.domains.list({
+await client.domains.list({
   maxRetries: 5,
 });
 ```
@@ -116,7 +116,7 @@ const client = new Inbound({
 });
 
 // Override per-request:
-await client.e2.domains.list({
+await client.domains.list({
   timeout: 5 * 1000,
 });
 ```
@@ -139,11 +139,11 @@ Unlike `.asResponse()` this method consumes the body, returning once it is parse
 ```ts
 const client = new Inbound();
 
-const response = await client.e2.domains.list().asResponse();
+const response = await client.domains.list().asResponse();
 console.log(response.headers.get('X-My-Header'));
 console.log(response.statusText); // access the underlying Response object
 
-const { data: domains, response: raw } = await client.e2.domains.list().withResponse();
+const { data: domains, response: raw } = await client.domains.list().withResponse();
 console.log(raw.headers.get('X-My-Header'));
 console.log(domains.data);
 ```
@@ -225,7 +225,7 @@ parameter. This library doesn't validate at runtime that the request matches the
 send will be sent as-is.
 
 ```ts
-client.e2.domains.list({
+client.domains.list({
   // ...
   // @ts-expect-error baz is not yet public
   baz: 'undocumented option',

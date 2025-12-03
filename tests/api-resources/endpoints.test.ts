@@ -7,10 +7,10 @@ const client = new Inbound({
   baseURL: process.env['TEST_API_BASE_URL'] ?? 'http://127.0.0.1:4010',
 });
 
-describe('resource emails', () => {
+describe('resource endpoints', () => {
   // Prism tests are disabled
   test.skip('create: only required params', async () => {
-    const responsePromise = client.e2.emails.create({ from: 'from', subject: 'subject', to: 'string' });
+    const responsePromise = client.endpoints.create({ config: { url: 'url' }, name: 'x', type: 'webhook' });
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -22,26 +22,29 @@ describe('resource emails', () => {
 
   // Prism tests are disabled
   test.skip('create: required and optional params', async () => {
-    const response = await client.e2.emails.create({
-      from: 'from',
-      subject: 'subject',
-      to: 'string',
-      attachments: [{ content: 'content', filename: 'filename', content_type: 'content_type', path: 'path' }],
-      bcc: 'string',
-      cc: 'string',
-      headers: {},
-      html: 'html',
-      reply_to: 'string',
-      scheduled_at: 'scheduled_at',
-      tags: [{ name: 'name', value: 'value' }],
-      text: 'text',
-      timezone: 'timezone',
+    const response = await client.endpoints.create({
+      config: { url: 'url', headers: {}, retryAttempts: 0, timeout: 1 },
+      name: 'x',
+      type: 'webhook',
+      description: 'description',
     });
   });
 
   // Prism tests are disabled
   test.skip('retrieve', async () => {
-    const responsePromise = client.e2.emails.retrieve('id');
+    const responsePromise = client.endpoints.retrieve('id');
+    const rawResponse = await responsePromise.asResponse();
+    expect(rawResponse).toBeInstanceOf(Response);
+    const response = await responsePromise;
+    expect(response).not.toBeInstanceOf(Response);
+    const dataAndResponse = await responsePromise.withResponse();
+    expect(dataAndResponse.data).toBe(response);
+    expect(dataAndResponse.response).toBe(rawResponse);
+  });
+
+  // Prism tests are disabled
+  test.skip('update', async () => {
+    const responsePromise = client.endpoints.update('id', {});
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -53,7 +56,7 @@ describe('resource emails', () => {
 
   // Prism tests are disabled
   test.skip('list', async () => {
-    const responsePromise = client.e2.emails.list();
+    const responsePromise = client.endpoints.list();
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -67,15 +70,8 @@ describe('resource emails', () => {
   test.skip('list: request options and params are passed correctly', async () => {
     // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
     await expect(
-      client.e2.emails.list(
-        {
-          address: 'address',
-          domain: 'domain',
-          limit: 'limit',
-          offset: 'offset',
-          status: 'delivered',
-          type: 'all',
-        },
+      client.endpoints.list(
+        { active: 'true', limit: 1, offset: 0, search: 'search', sortBy: 'newest', type: 'webhook' },
         { path: '/_stainless_unknown_path' },
       ),
     ).rejects.toThrow(Inbound.NotFoundError);
@@ -83,7 +79,7 @@ describe('resource emails', () => {
 
   // Prism tests are disabled
   test.skip('delete', async () => {
-    const responsePromise = client.e2.emails.delete('id');
+    const responsePromise = client.endpoints.delete('id');
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -94,35 +90,8 @@ describe('resource emails', () => {
   });
 
   // Prism tests are disabled
-  test.skip('reply: only required params', async () => {
-    const responsePromise = client.e2.emails.reply('id', { from: 'from' });
-    const rawResponse = await responsePromise.asResponse();
-    expect(rawResponse).toBeInstanceOf(Response);
-    const response = await responsePromise;
-    expect(response).not.toBeInstanceOf(Response);
-    const dataAndResponse = await responsePromise.withResponse();
-    expect(dataAndResponse.data).toBe(response);
-    expect(dataAndResponse.response).toBe(rawResponse);
-  });
-
-  // Prism tests are disabled
-  test.skip('reply: required and optional params', async () => {
-    const response = await client.e2.emails.reply('id', {
-      from: 'from',
-      attachments: [{ content: 'content', filename: 'filename', content_type: 'content_type', path: 'path' }],
-      headers: {},
-      html: 'html',
-      reply_all: true,
-      subject: 'subject',
-      tags: [{ name: 'name', value: 'value' }],
-      text: 'text',
-      to: 'string',
-    });
-  });
-
-  // Prism tests are disabled
-  test.skip('retry', async () => {
-    const responsePromise = client.e2.emails.retry('id', {});
+  test.skip('test', async () => {
+    const responsePromise = client.endpoints.test('id', {});
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
