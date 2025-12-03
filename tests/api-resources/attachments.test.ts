@@ -7,10 +7,10 @@ const client = new Inbound({
   baseURL: process.env['TEST_API_BASE_URL'] ?? 'http://127.0.0.1:4010',
 });
 
-describe('resource e2', () => {
+describe('resource attachments', () => {
   // Prism tests are disabled
   test.skip('retrieve: only required params', async () => {
-    const responsePromise = client.e2.retrieve('filename', { id: 'id' });
+    const responsePromise = client.attachments.retrieve('filename', { id: 'id' });
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -22,6 +22,6 @@ describe('resource e2', () => {
 
   // Prism tests are disabled
   test.skip('retrieve: required and optional params', async () => {
-    const response = await client.e2.retrieve('filename', { id: 'id' });
+    const response = await client.attachments.retrieve('filename', { id: 'id' });
   });
 });

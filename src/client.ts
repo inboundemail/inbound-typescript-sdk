@@ -16,7 +16,57 @@ import * as Errors from './core/error';
 import * as Uploads from './core/uploads';
 import * as API from './resources/index';
 import { APIPromise } from './core/api-promise';
-import { E2, E2RetrieveParams } from './resources/e2/e2';
+import { AttachmentRetrieveParams, Attachments } from './resources/attachments';
+import {
+  DomainCreateParams,
+  DomainCreateResponse,
+  DomainDeleteResponse,
+  DomainListParams,
+  DomainListResponse,
+  DomainRetrieveParams,
+  DomainRetrieveResponse,
+  DomainUpdateParams,
+  DomainUpdateResponse,
+  Domains,
+} from './resources/domains';
+import {
+  EmailAddressCreateParams,
+  EmailAddressCreateResponse,
+  EmailAddressDeleteResponse,
+  EmailAddressListParams,
+  EmailAddressListResponse,
+  EmailAddressRetrieveResponse,
+  EmailAddressUpdateParams,
+  EmailAddressUpdateResponse,
+  EmailAddresses,
+} from './resources/email-addresses';
+import {
+  EmailDeleteResponse,
+  EmailListParams,
+  EmailListResponse,
+  EmailReplyParams,
+  EmailReplyResponse,
+  EmailRetrieveResponse,
+  EmailRetryParams,
+  EmailRetryResponse,
+  EmailSendParams,
+  EmailSendResponse,
+  Emails,
+} from './resources/emails';
+import {
+  EndpointCreateParams,
+  EndpointCreateResponse,
+  EndpointDeleteResponse,
+  EndpointListParams,
+  EndpointListResponse,
+  EndpointRetrieveResponse,
+  EndpointTestParams,
+  EndpointTestResponse,
+  EndpointUpdateParams,
+  EndpointUpdateResponse,
+  Endpoints,
+} from './resources/endpoints';
+import { Mail, MailListParams, MailListResponse } from './resources/mail/mail';
 import { type Fetch } from './internal/builtin-types';
 import { HeadersLike, NullableHeaders, buildHeaders } from './internal/headers';
 import { FinalRequestOptions, RequestOptions } from './internal/request-options';
@@ -714,13 +764,78 @@ export class Inbound {
 
   static toFile = Uploads.toFile;
 
-  e2: API.E2 = new API.E2(this);
+  attachments: API.Attachments = new API.Attachments(this);
+  domains: API.Domains = new API.Domains(this);
+  endpoints: API.Endpoints = new API.Endpoints(this);
+  emailAddresses: API.EmailAddresses = new API.EmailAddresses(this);
+  emails: API.Emails = new API.Emails(this);
+  mail: API.Mail = new API.Mail(this);
 }
 
-Inbound.E2 = E2;
+Inbound.Attachments = Attachments;
+Inbound.Domains = Domains;
+Inbound.Endpoints = Endpoints;
+Inbound.EmailAddresses = EmailAddresses;
+Inbound.Emails = Emails;
+Inbound.Mail = Mail;
 
 export declare namespace Inbound {
   export type RequestOptions = Opts.RequestOptions;
 
-  export { E2 as E2, type E2RetrieveParams as E2RetrieveParams };
+  export { Attachments as Attachments, type AttachmentRetrieveParams as AttachmentRetrieveParams };
+
+  export {
+    Domains as Domains,
+    type DomainCreateResponse as DomainCreateResponse,
+    type DomainRetrieveResponse as DomainRetrieveResponse,
+    type DomainUpdateResponse as DomainUpdateResponse,
+    type DomainListResponse as DomainListResponse,
+    type DomainDeleteResponse as DomainDeleteResponse,
+    type DomainCreateParams as DomainCreateParams,
+    type DomainRetrieveParams as DomainRetrieveParams,
+    type DomainUpdateParams as DomainUpdateParams,
+    type DomainListParams as DomainListParams,
+  };
+
+  export {
+    Endpoints as Endpoints,
+    type EndpointCreateResponse as EndpointCreateResponse,
+    type EndpointRetrieveResponse as EndpointRetrieveResponse,
+    type EndpointUpdateResponse as EndpointUpdateResponse,
+    type EndpointListResponse as EndpointListResponse,
+    type EndpointDeleteResponse as EndpointDeleteResponse,
+    type EndpointTestResponse as EndpointTestResponse,
+    type EndpointCreateParams as EndpointCreateParams,
+    type EndpointUpdateParams as EndpointUpdateParams,
+    type EndpointListParams as EndpointListParams,
+    type EndpointTestParams as EndpointTestParams,
+  };
+
+  export {
+    EmailAddresses as EmailAddresses,
+    type EmailAddressCreateResponse as EmailAddressCreateResponse,
+    type EmailAddressRetrieveResponse as EmailAddressRetrieveResponse,
+    type EmailAddressUpdateResponse as EmailAddressUpdateResponse,
+    type EmailAddressListResponse as EmailAddressListResponse,
+    type EmailAddressDeleteResponse as EmailAddressDeleteResponse,
+    type EmailAddressCreateParams as EmailAddressCreateParams,
+    type EmailAddressUpdateParams as EmailAddressUpdateParams,
+    type EmailAddressListParams as EmailAddressListParams,
+  };
+
+  export {
+    Emails as Emails,
+    type EmailRetrieveResponse as EmailRetrieveResponse,
+    type EmailListResponse as EmailListResponse,
+    type EmailDeleteResponse as EmailDeleteResponse,
+    type EmailReplyResponse as EmailReplyResponse,
+    type EmailRetryResponse as EmailRetryResponse,
+    type EmailSendResponse as EmailSendResponse,
+    type EmailListParams as EmailListParams,
+    type EmailReplyParams as EmailReplyParams,
+    type EmailRetryParams as EmailRetryParams,
+    type EmailSendParams as EmailSendParams,
+  };
+
+  export { Mail as Mail, type MailListResponse as MailListResponse, type MailListParams as MailListParams };
 }
