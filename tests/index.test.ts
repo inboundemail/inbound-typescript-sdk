@@ -302,13 +302,13 @@ describe('instantiate client', () => {
     test('empty env variable', () => {
       process.env['INBOUND_BASE_URL'] = ''; // empty
       const client = new Inbound({ apiKey: 'My API Key' });
-      expect(client.baseURL).toEqual('https://api.example.com');
+      expect(client.baseURL).toEqual('https://inbound.new');
     });
 
     test('blank env variable', () => {
       process.env['INBOUND_BASE_URL'] = '  '; // blank
       const client = new Inbound({ apiKey: 'My API Key' });
-      expect(client.baseURL).toEqual('https://api.example.com');
+      expect(client.baseURL).toEqual('https://inbound.new');
     });
 
     test('in request options', () => {
