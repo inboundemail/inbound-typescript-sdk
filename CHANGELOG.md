@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0 (2025-12-03)
+
+Full Changelog: [v0.4.0...v0.5.0](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.4.0...v0.5.0)
+
+### Features
+
+* **api:** api update ([4c30b52](https://github.com/inboundemail/inbound-typescript-sdk/commit/4c30b529b16cc31676bd94ef0534a040176dd925))
+
 ## 0.4.0 (2025-12-03)
 
 Full Changelog: [v0.3.0...v0.4.0](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.3.0...v0.4.0)
