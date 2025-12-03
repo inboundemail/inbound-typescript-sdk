@@ -16,19 +16,7 @@ import * as Errors from './core/error';
 import * as Uploads from './core/uploads';
 import * as API from './resources/index';
 import { APIPromise } from './core/api-promise';
-import {
-  DomainCreateParams,
-  DomainCreateResponse,
-  DomainDeleteParams,
-  DomainDeleteResponse,
-  DomainListParams,
-  DomainListResponse,
-  DomainRetrieveParams,
-  DomainRetrieveResponse,
-  DomainUpdateParams,
-  DomainUpdateResponse,
-  Domains,
-} from './resources/domains';
+import { E2, E2RetrieveParams } from './resources/e2/e2';
 import { type Fetch } from './internal/builtin-types';
 import { HeadersLike, NullableHeaders, buildHeaders } from './internal/headers';
 import { FinalRequestOptions, RequestOptions } from './internal/request-options';
@@ -44,9 +32,9 @@ import { isEmptyObj } from './internal/utils/values';
 
 export interface ClientOptions {
   /**
-   * API key authentication. Use your API key as the bearer token.
+   * Your Inbound API key. Include it in the Authorization header as: Bearer <your-api-key>
    */
-  apiKey?: string | null | undefined;
+  apiKey?: string | undefined;
 
   /**
    * Override the default base URL for the API, e.g., "https://api.example.com/v2/"
@@ -121,7 +109,7 @@ export interface ClientOptions {
  * API Client for interfacing with the Inbound API.
  */
 export class Inbound {
-  apiKey: string | null;
+  apiKey: string;
 
   baseURL: string;
   maxRetries: number;
@@ -138,8 +126,8 @@ export class Inbound {
   /**
    * API Client for interfacing with the Inbound API.
    *
-   * @param {string | null | undefined} [opts.apiKey=process.env['INBOUND_API_KEY'] ?? null]
-   * @param {string} [opts.baseURL=process.env['INBOUND_BASE_URL'] ?? /api/v3] - Override the default base URL for the API.
+   * @param {string | undefined} [opts.apiKey=process.env['INBOUND_API_KEY'] ?? undefined]
+   * @param {string} [opts.baseURL=process.env['INBOUND_BASE_URL'] ?? https://api.example.com] - Override the default base URL for the API.
    * @param {number} [opts.timeout=1 minute] - The maximum amount of time (in milliseconds) the client will wait for a response before timing out.
    * @param {MergedRequestInit} [opts.fetchOptions] - Additional `RequestInit` options to be passed to `fetch` calls.
    * @param {Fetch} [opts.fetch] - Specify a custom `fetch` function implementation.
@@ -149,13 +137,19 @@ export class Inbound {
    */
   constructor({
     baseURL = readEnv('INBOUND_BASE_URL'),
-    apiKey = readEnv('INBOUND_API_KEY') ?? null,
+    apiKey = readEnv('INBOUND_API_KEY'),
     ...opts
   }: ClientOptions = {}) {
+    if (apiKey === undefined) {
+      throw new Errors.InboundError(
+        "The INBOUND_API_KEY environment variable is missing or empty; either provide it, or instantiate the Inbound client with an apiKey option, like new Inbound({ apiKey: 'My API Key' }).",
+      );
+    }
+
     const options: ClientOptions = {
       apiKey,
       ...opts,
-      baseURL: baseURL || `/api/v3`,
+      baseURL: baseURL || `https://api.example.com`,
     };
 
     this.baseURL = options.baseURL!;
@@ -201,7 +195,7 @@ export class Inbound {
    * Check whether the base URL is set to its default.
    */
   #baseURLOverridden(): boolean {
-    return this.baseURL !== '/api/v3';
+    return this.baseURL !== 'https://api.example.com';
   }
 
   protected defaultQuery(): Record<string, string | undefined> | undefined {
@@ -209,22 +203,10 @@ export class Inbound {
   }
 
   protected validateHeaders({ values, nulls }: NullableHeaders) {
-    if (this.apiKey && values.get('authorization')) {
-      return;
-    }
-    if (nulls.has('authorization')) {
-      return;
-    }
-
-    throw new Error(
-      'Could not resolve authentication method. Expected the apiKey to be set. Or for the "Authorization" headers to be explicitly omitted',
-    );
+    return;
   }
 
   protected async authHeaders(opts: FinalRequestOptions): Promise<NullableHeaders | undefined> {
-    if (this.apiKey == null) {
-      return undefined;
-    }
     return buildHeaders([{ Authorization: `Bearer ${this.apiKey}` }]);
   }
 
@@ -732,25 +714,13 @@ export class Inbound {
 
   static toFile = Uploads.toFile;
 
-  domains: API.Domains = new API.Domains(this);
+  e2: API.E2 = new API.E2(this);
 }
 
-Inbound.Domains = Domains;
+Inbound.E2 = E2;
 
 export declare namespace Inbound {
   export type RequestOptions = Opts.RequestOptions;
 
-  export {
-    Domains as Domains,
-    type DomainCreateResponse as DomainCreateResponse,
-    type DomainRetrieveResponse as DomainRetrieveResponse,
-    type DomainUpdateResponse as DomainUpdateResponse,
-    type DomainListResponse as DomainListResponse,
-    type DomainDeleteResponse as DomainDeleteResponse,
-    type DomainCreateParams as DomainCreateParams,
-    type DomainRetrieveParams as DomainRetrieveParams,
-    type DomainUpdateParams as DomainUpdateParams,
-    type DomainListParams as DomainListParams,
-    type DomainDeleteParams as DomainDeleteParams,
-  };
+  export { E2 as E2, type E2RetrieveParams as E2RetrieveParams };
 }

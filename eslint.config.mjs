@@ -25,7 +25,7 @@ export default tseslint.config(
         {
           patterns: [
             {
-              regex: '^inbound(/.*)?',
+              regex: '^inboundemail(/.*)?',
               message: 'Use a relative import, not a package import.',
             },
           ],

@@ -1,5 +1,5 @@
-import { multipartFormRequestOptions, createForm } from 'inbound/internal/uploads';
-import { toFile } from 'inbound/core/uploads';
+import { multipartFormRequestOptions, createForm } from 'inboundemail/internal/uploads';
+import { toFile } from 'inboundemail/core/uploads';
 
 describe('form data validation', () => {
   test('valid values do not error', async () => {

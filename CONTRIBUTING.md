@@ -55,12 +55,12 @@ $ cd inbound-typescript
 # With yarn
 $ yarn link
 $ cd ../my-package
-$ yarn link inbound
+$ yarn link inboundemail
 
 # With pnpm
 $ pnpm link --global
 $ cd ../my-package
-$ pnpm link -—global inbound
+$ pnpm link -—global inboundemail
 ```
 
 ## Running tests
