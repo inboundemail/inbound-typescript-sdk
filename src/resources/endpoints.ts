@@ -323,6 +323,9 @@ export namespace EndpointCreateParams {
   export interface UnionMember0 {
     url: string;
 
+    /**
+     * Custom headers to include with webhook requests
+     */
     headers?: unknown;
 
     retryAttempts?: number;
@@ -362,6 +365,9 @@ export namespace EndpointUpdateParams {
   export interface UnionMember0 {
     url: string;
 
+    /**
+     * Custom headers to include with webhook requests
+     */
     headers?: unknown;
 
     retryAttempts?: number;
