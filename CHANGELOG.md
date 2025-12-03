@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0 (2025-12-03)
+
+Full Changelog: [v0.2.0...v0.3.0](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.2.0...v0.3.0)
+
+### Features
+
+* **api:** manual updates ([396356c](https://github.com/inboundemail/inbound-typescript-sdk/commit/396356ca8c61e67e31d08fe86a9263079b7cbfe8))
+
+
+### Chores
+
+* update SDK settings ([6182b96](https://github.com/inboundemail/inbound-typescript-sdk/commit/6182b96a6824c7020c862c6cc4bdc95e4f547591))
+
 ## 0.2.0 (2025-12-03)
 
 Full Changelog: [v0.1.0...v0.2.0](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.1.0...v0.2.0)
