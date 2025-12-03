@@ -1,467 +1,361 @@
-# @inboundemail/sdk
+# Inbound TypeScript API Library
 
-The official SDK for the Inbound Email API v2. This SDK provides a simple and intuitive hierarchical interface for managing email receiving, sending, domains, email addresses, and webhook endpoints.
+[![NPM version](<https://img.shields.io/npm/v/inboundemail.svg?label=npm%20(stable)>)](https://npmjs.org/package/inboundemail) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/inboundemail)
 
-**Version 4.0.0** introduces a new hierarchical structure with `inbound.email.address.*` methods and consistent `{ data, error }` response patterns.
+This library provides convenient access to the Inbound REST API from server-side TypeScript or JavaScript.
+
+The full API of this library can be found in [api.md](api.md).
+
+It is generated with [Stainless](https://www.stainless.com/).
 
 ## Installation
 
-Choose your preferred package name - both contain identical functionality:
-
-```bash
-# Full scoped name
-npm install @inboundemail/sdk
-
-# Short alias
-npm install inbnd
+```sh
+npm install git+ssh://git@github.com:stainless-sdks/inbound-typescript.git
 ```
 
-Both packages are published simultaneously and contain the same code. Use whichever name you prefer!
+> [!NOTE]
+> Once this package is [published to npm](https://www.stainless.com/docs/guides/publish), this will become: `npm install inboundemail`
 
-## Quick Start
+## Usage
 
-Both package names work identically:
+The full API of this library can be found in [api.md](api.md).
 
-```typescript
-// Using full scoped name
-import { Inbound } from '@inboundemail/sdk'
+<!-- prettier-ignore -->
+```js
+import Inbound from 'inboundemail';
 
-// Or using short alias  
-import { Inbound } from 'inbnd'
+const client = new Inbound({
+  apiKey: process.env['INBOUND_API_KEY'], // This is the default and can be omitted
+});
 
-const inbound = new Inbound(process.env.INBOUND_API_KEY!)
+const domains = await client.e2.domains.list();
 
-// Send an email (with { data, error } pattern)
-const { data: email, error } = await inbound.email.send({
-  from: 'hello@yourdomain.com',
-  to: 'user@example.com',
-  subject: 'Hello World',
-  html: '<h1>Hello World</h1><p>This is your first email!</p>',
-})
-
-if (error) {
-  console.error('Failed to send email:', error)
-} else {
-  console.log('Email sent:', email.id)
-}
+console.log(domains.data);
 ```
 
-## 🏗️ Unified Email API (New in v5.0.0)
+### Request & Response types
 
-The SDK now uses a unified email structure under `inbound.email.*`:
+This library includes TypeScript definitions for all request params and response fields. You may import and use them like so:
 
-```typescript
-// 📧 Received Email Management (NEW - unified under email.received)
-inbound.email.received.list()           // List received emails
-inbound.email.received.get(id)          // Get specific received email
-inbound.email.received.thread(id)       // Get email thread
-inbound.email.received.markRead(id)     // Mark as read
-inbound.email.received.archive(id)      // Archive email
-inbound.email.received.reply(params)    // Reply to received email
+<!-- prettier-ignore -->
+```ts
+import Inbound from 'inboundemail';
 
-// 📤 Sent Email Management (NEW - organized under email.sent)
-inbound.email.send(data)                // Send email immediately
-inbound.email.schedule(data)            // Schedule email
-inbound.email.sent.get(id)              // Get sent email by ID
-inbound.email.sent.reply(id, data)      // Reply to sent email
-inbound.email.sent.listScheduled()      // List scheduled emails
-inbound.email.sent.getScheduled(id)     // Get specific scheduled email
-inbound.email.sent.cancel(id)           // Cancel scheduled email
+const client = new Inbound({
+  apiKey: process.env['INBOUND_API_KEY'], // This is the default and can be omitted
+});
 
-// 🔄 Universal Email Access
-inbound.email.get(id)                   // Get ANY email (received or sent)
-
-// 📮 Email Address Management (nested under email)
-inbound.email.address.create(data)      // Create email address
-inbound.email.address.list()            // List email addresses
-inbound.email.address.get(id)           // Get address details
-inbound.email.address.update(id, data)  // Update address routing
-inbound.email.address.delete(id)        // Remove address
-
-// 🌐 Domain Management
-inbound.domain.create(data)             // Add new domain
-inbound.domain.list()                   // List all domains
-inbound.domain.verify(id)               // Verify domain
-inbound.domain.getDnsRecords(id)        // Get DNS records
-
-// 🔗 Endpoint Management (Webhooks & Forwarding)
-inbound.endpoint.create(data)           // Create endpoint
-inbound.endpoint.list()                 // List endpoints
-inbound.endpoint.test(id)               // Test endpoint
+const domains: Inbound.E2.DomainListResponse = await client.e2.domains.list();
 ```
 
-### ⚠️ Deprecated Methods
-
-The old `inbound.mail.*` methods are deprecated but still work with console warnings:
-
-```typescript
-// ❌ DEPRECATED - Will be removed in v6.0.0
-inbound.mail.list()           // Use inbound.email.received.list() instead
-inbound.mail.get(id)          // Use inbound.email.received.get() instead
-inbound.mail.markRead(id)     // Use inbound.email.received.markRead() instead
-// ... etc
-```
-
-## 📊 Response Pattern
-
-All methods now return a consistent `{ data, error }` pattern:
-
-```typescript
-// Success case
-const { data, error } = await inbound.mail.list()
-if (error) {
-  console.error('Error:', error)
-  return
-}
-console.log('Emails:', data.emails)
-
-// Or with destructuring
-const { data: emails, error: emailsError } = await inbound.mail.list()
-const { data: domains, error: domainsError } = await inbound.domain.list()
-```
-
-## Streamlined Webhook Replies
-
-The SDK includes a streamlined `reply()` method that makes it easy to reply to emails directly from webhook handlers:
-
-### Quick Setup
-
-```typescript
-// Works with either package name
-import { Inbound, type InboundWebhookPayload, isInboundWebhook } from '@inboundemail/sdk'
-// import { Inbound, type InboundWebhookPayload, isInboundWebhook } from 'inbnd'
-import { NextRequest, NextResponse } from 'next/server'
-
-const inbound = new Inbound(process.env.INBOUND_API_KEY!)
-
-export async function POST(request: NextRequest) {
-  const payload: InboundWebhookPayload = await request.json()
-  
-  if (!isInboundWebhook(payload)) {
-    return NextResponse.json({ error: 'Invalid webhook' }, { status: 400 })
-  }
-  
-  const { email } = payload
-  
-  // Reply to emails with new { data, error } pattern
-  const { data, error } = await inbound.reply(email, {
-    from: 'support@yourdomain.com',
-    text: 'Thanks for your message! We\'ll get back to you soon.'
-  })
-
-  if (error) {
-    console.error('Reply failed:', error)
-    return NextResponse.json({ error }, { status: 500 })
-  }
-
-  return NextResponse.json({ success: true, messageId: data.messageId })
-}
-```
-
-## 📮 Email Address Management
-
-The new hierarchical structure makes email address management more intuitive:
-
-```typescript
-// List all email addresses
-const { data: addresses, error } = await inbound.email.address.list()
-
-// Create a new email address
-const { data: newAddress, error: createError } = await inbound.email.address.create({
-  address: 'support@yourdomain.com',
-  domainId: 'domain-123'
-})
-
-// Update routing for an email address
-const { data: updated, error: updateError } = await inbound.email.address.update('address-123', {
-  endpointId: 'webhook-456',
-  isActive: true
-})
-
-// Delete an email address
-const { data: deleted, error: deleteError } = await inbound.email.address.delete('address-123')
-```
-
-## 🌐 Domain Management
-
-```typescript
-// Create and verify a domain
-const { data: domain, error } = await inbound.domain.create({
-  domain: 'yourdomain.com'
-})
-
-if (!error) {
-  // Get DNS records needed for verification
-  const { data: dnsRecords } = await inbound.domain.getDnsRecords(domain.id)
-  console.log('Add these DNS records:', dnsRecords)
-  
-  // Verify domain after DNS setup
-  const { data: verification } = await inbound.domain.verify(domain.id)
-}
-```
-
-## 🔗 Endpoint Management
-
-```typescript
-// Create a webhook endpoint
-const { data: webhook, error } = await inbound.endpoint.create({
-  name: 'My Webhook',
-  type: 'webhook',
-  config: {
-    url: 'https://yourapp.com/webhook',
-    timeout: 30000,
-    retryAttempts: 3
-  }
-})
-
-// Test the endpoint
-if (!error) {
-  const { data: testResult } = await inbound.endpoint.test(webhook.id)
-  console.log('Test result:', testResult)
-}
-```
-
-## 🎯 Convenience Methods
-
-```typescript
-// Quick reply to an email
-const { data, error } = await inbound.quickReply(
-  'email-123', 
-  'Thanks for your message!', 
-  'support@yourdomain.com',
-  { idempotencyKey: 'quick-reply-123' }
-)
-
-// One-step domain setup with webhook
-const { data: setup } = await inbound.setupDomain(
-  'newdomain.com',
-  'https://yourapp.com/webhook'
-)
-
-// Create email forwarder
-const { data: forwarder } = await inbound.createForwarder(
-  'info@yourdomain.com',
-  'team@yourdomain.com'
-)
-
-// Schedule a reminder
-const { data: reminder } = await inbound.scheduleReminder(
-  'user@example.com',
-  'Meeting Tomorrow',
-  'tomorrow at 9am',
-  'reminders@yourdomain.com',
-  { idempotencyKey: 'reminder-meeting-456' }
-)
-```
-
-## 🔄 Legacy Compatibility
-
-All previous method names still work for backwards compatibility:
-
-```typescript
-// These are equivalent:
-inbound.email === inbound.emails
-inbound.domain === inbound.domains  
-inbound.endpoint === inbound.endpoints
-inbound.email.address === inbound.emailAddresses
-
-// Legacy usage still works:
-const { data } = await inbound.emails.send(emailData)
-const { data } = await inbound.domains.list()
-```
-
-## 📧 Email Sending & Scheduling
-
-### Send Immediate Email
-
-```typescript
-const { data: email, error } = await inbound.email.send({
-  from: 'hello@yourdomain.com',
-  to: ['user@example.com', 'admin@example.com'],
-  subject: 'Welcome!',
-  html: '<h1>Welcome to our service!</h1>',
-  text: 'Welcome to our service!',
-  attachments: [
-    {
-      filename: 'welcome.pdf',
-      path: './welcome.pdf'
-    }
-  ]
-})
-```
-
-### Schedule Email
-
-```typescript
-const { data: scheduled, error } = await inbound.email.schedule({
-  from: 'hello@yourdomain.com',
-  to: 'user@example.com',
-  subject: 'Scheduled Email',
-  html: '<p>This email was scheduled!</p>',
-  scheduled_at: 'in 1 hour',           // Natural language
-  timezone: 'America/New_York'
-})
-
-// Or with specific date
-const { data: scheduled2 } = await inbound.email.schedule({
-  from: 'hello@yourdomain.com',
-  to: 'user@example.com',
-  subject: 'New Year Email',
-  html: '<p>Happy New Year!</p>',
-  scheduled_at: '2024-01-01T00:00:00Z'  // ISO 8601
-})
-```
-
-### Manage Scheduled Emails
-
-```typescript
-// List scheduled emails
-const { data: scheduledEmails } = await inbound.email.listScheduled({
-  status: 'scheduled',
-  limit: 10
-})
-
-// Get specific scheduled email
-const { data: scheduledEmail } = await inbound.email.getScheduled('email-id')
-
-// Cancel scheduled email
-const { data: cancelled } = await inbound.email.cancel('email-id')
-```
-
-## 📬 Inbound Email Management
-
-```typescript
-// List received emails
-const { data: emails } = await inbound.mail.list({
-  limit: 50,
-  status: 'processed',
-  timeRange: '7d'
-})
-
-// Get specific email
-const { data: email } = await inbound.mail.get('email-123')
-
-// Get email thread/conversation
-const { data: thread } = await inbound.mail.thread('email-123')
-
-// Mark email as read/unread
-await inbound.mail.markRead('email-123')
-await inbound.mail.markUnread('email-123')
-
-// Archive/unarchive emails
-await inbound.mail.archive('email-123')
-await inbound.mail.unarchive('email-123')
-
-// Bulk operations
-const { data: result } = await inbound.mail.bulk(
-  ['email-1', 'email-2', 'email-3'],
-  { isRead: true }
-)
-```
-
-## 🔧 Advanced Usage
-
-### React Email Components
-
-```typescript
-import { EmailTemplate } from './EmailTemplate'
-
-const { data, error } = await inbound.email.send({
-  from: 'hello@yourdomain.com',
-  to: 'user@example.com',
-  subject: 'Welcome!',
-  react: EmailTemplate({ name: 'John', welcomeUrl: 'https://app.com' })
-})
-```
-
-### Idempotency
-
-Prevent duplicate emails by using idempotency keys:
-
-```typescript
-const { data, error } = await inbound.email.send({
-  from: 'hello@yourdomain.com',
-  to: 'user@example.com',
-  subject: 'Important Email',
-  text: 'This email will only be sent once'
-}, {
-  idempotencyKey: 'unique-key-123'
-})
-
-// Works with all email sending methods
-await inbound.email.schedule({
-  from: 'hello@yourdomain.com',
-  to: 'user@example.com',
-  subject: 'Scheduled Email',
-  text: 'This scheduled email is idempotent',
-  scheduled_at: 'tomorrow at 9am'
-}, {
-  idempotencyKey: 'scheduled-email-456'
-})
-
-// Also works with replies
-await inbound.email.reply('email-123', {
-  from: 'support@yourdomain.com',
-  text: 'This reply will only be sent once'
-}, {
-  idempotencyKey: 'reply-789'
-})
-```
-
-## 🛠️ Error Handling
-
-```typescript
-const { data, error } = await inbound.email.send(emailData)
-
-if (error) {
-  // Handle different error types
-  if (error.includes('Invalid API key')) {
-    console.error('Authentication failed')
-  } else if (error.includes('Rate limit')) {
-    console.error('Rate limit exceeded')
+Documentation for each method, request param, and response field are available in docstrings and will appear on hover in most modern editors.
+
+## Handling errors
+
+When the library is unable to connect to the API,
+or if the API returns a non-success status code (i.e., 4xx or 5xx response),
+a subclass of `APIError` will be thrown:
+
+<!-- prettier-ignore -->
+```ts
+const domains = await client.e2.domains.list().catch(async (err) => {
+  if (err instanceof Inbound.APIError) {
+    console.log(err.status); // 400
+    console.log(err.name); // BadRequestError
+    console.log(err.headers); // {server: 'nginx', ...}
   } else {
-    console.error('Unknown error:', error)
+    throw err;
   }
-  return
-}
-
-// Success case
-console.log('Email sent successfully:', data.id)
+});
 ```
 
-## 📚 TypeScript Support
+Error codes are as follows:
 
-The SDK is fully typed with TypeScript:
+| Status Code | Error Type                 |
+| ----------- | -------------------------- |
+| 400         | `BadRequestError`          |
+| 401         | `AuthenticationError`      |
+| 403         | `PermissionDeniedError`    |
+| 404         | `NotFoundError`            |
+| 422         | `UnprocessableEntityError` |
+| 429         | `RateLimitError`           |
+| >=500       | `InternalServerError`      |
+| N/A         | `APIConnectionError`       |
 
-```typescript
-// Type imports work with either package name
-import type { 
-  ApiResponse,
-  PostEmailsRequest,
-  PostEmailsResponse,
-  InboundWebhookPayload 
-} from '@inboundemail/sdk'
-// } from 'inbnd'
+### Retries
 
-// Type-safe email sending
-const emailRequest: PostEmailsRequest = {
-  from: 'hello@yourdomain.com',
-  to: 'user@example.com',
-  subject: 'Typed Email',
-  html: '<p>This is type-safe!</p>'
-}
+Certain errors will be automatically retried 2 times by default, with a short exponential backoff.
+Connection errors (for example, due to a network connectivity problem), 408 Request Timeout, 409 Conflict,
+429 Rate Limit, and >=500 Internal errors will all be retried by default.
 
-const response: ApiResponse<PostEmailsResponse> = await inbound.email.send(emailRequest)
+You can use the `maxRetries` option to configure or disable this:
+
+<!-- prettier-ignore -->
+```js
+// Configure the default for all requests:
+const client = new Inbound({
+  maxRetries: 0, // default is 2
+});
+
+// Or, configure per-request:
+await client.e2.domains.list({
+  maxRetries: 5,
+});
 ```
 
-## 🔗 Links
+### Timeouts
 
-- [API Documentation](https://docs.inbound.new)
-- [GitHub Repository](https://github.com/inboundemail/sdk)
-- NPM Packages:
-  - [@inboundemail/sdk](https://www.npmjs.com/package/@inboundemail/sdk) - Full scoped name
-  - [inbnd](https://www.npmjs.com/package/inbnd) - Short alias
+Requests time out after 1 minute by default. You can configure this with a `timeout` option:
 
-## 📄 License
+<!-- prettier-ignore -->
+```ts
+// Configure the default for all requests:
+const client = new Inbound({
+  timeout: 20 * 1000, // 20 seconds (default is 1 minute)
+});
 
-MIT License - see LICENSE file for details. 
+// Override per-request:
+await client.e2.domains.list({
+  timeout: 5 * 1000,
+});
+```
+
+On timeout, an `APIConnectionTimeoutError` is thrown.
+
+Note that requests which time out will be [retried twice by default](#retries).
+
+## Advanced Usage
+
+### Accessing raw Response data (e.g., headers)
+
+The "raw" `Response` returned by `fetch()` can be accessed through the `.asResponse()` method on the `APIPromise` type that all methods return.
+This method returns as soon as the headers for a successful response are received and does not consume the response body, so you are free to write custom parsing or streaming logic.
+
+You can also use the `.withResponse()` method to get the raw `Response` along with the parsed data.
+Unlike `.asResponse()` this method consumes the body, returning once it is parsed.
+
+<!-- prettier-ignore -->
+```ts
+const client = new Inbound();
+
+const response = await client.e2.domains.list().asResponse();
+console.log(response.headers.get('X-My-Header'));
+console.log(response.statusText); // access the underlying Response object
+
+const { data: domains, response: raw } = await client.e2.domains.list().withResponse();
+console.log(raw.headers.get('X-My-Header'));
+console.log(domains.data);
+```
+
+### Logging
+
+> [!IMPORTANT]
+> All log messages are intended for debugging only. The format and content of log messages
+> may change between releases.
+
+#### Log levels
+
+The log level can be configured in two ways:
+
+1. Via the `INBOUND_LOG` environment variable
+2. Using the `logLevel` client option (overrides the environment variable if set)
+
+```ts
+import Inbound from 'inboundemail';
+
+const client = new Inbound({
+  logLevel: 'debug', // Show all log messages
+});
+```
+
+Available log levels, from most to least verbose:
+
+- `'debug'` - Show debug messages, info, warnings, and errors
+- `'info'` - Show info messages, warnings, and errors
+- `'warn'` - Show warnings and errors (default)
+- `'error'` - Show only errors
+- `'off'` - Disable all logging
+
+At the `'debug'` level, all HTTP requests and responses are logged, including headers and bodies.
+Some authentication-related headers are redacted, but sensitive data in request and response bodies
+may still be visible.
+
+#### Custom logger
+
+By default, this library logs to `globalThis.console`. You can also provide a custom logger.
+Most logging libraries are supported, including [pino](https://www.npmjs.com/package/pino), [winston](https://www.npmjs.com/package/winston), [bunyan](https://www.npmjs.com/package/bunyan), [consola](https://www.npmjs.com/package/consola), [signale](https://www.npmjs.com/package/signale), and [@std/log](https://jsr.io/@std/log). If your logger doesn't work, please open an issue.
+
+When providing a custom logger, the `logLevel` option still controls which messages are emitted, messages
+below the configured level will not be sent to your logger.
+
+```ts
+import Inbound from 'inboundemail';
+import pino from 'pino';
+
+const logger = pino();
+
+const client = new Inbound({
+  logger: logger.child({ name: 'Inbound' }),
+  logLevel: 'debug', // Send all messages to pino, allowing it to filter
+});
+```
+
+### Making custom/undocumented requests
+
+This library is typed for convenient access to the documented API. If you need to access undocumented
+endpoints, params, or response properties, the library can still be used.
+
+#### Undocumented endpoints
+
+To make requests to undocumented endpoints, you can use `client.get`, `client.post`, and other HTTP verbs.
+Options on the client, such as retries, will be respected when making these requests.
+
+```ts
+await client.post('/some/path', {
+  body: { some_prop: 'foo' },
+  query: { some_query_arg: 'bar' },
+});
+```
+
+#### Undocumented request params
+
+To make requests using undocumented parameters, you may use `// @ts-expect-error` on the undocumented
+parameter. This library doesn't validate at runtime that the request matches the type, so any extra values you
+send will be sent as-is.
+
+```ts
+client.e2.domains.list({
+  // ...
+  // @ts-expect-error baz is not yet public
+  baz: 'undocumented option',
+});
+```
+
+For requests with the `GET` verb, any extra params will be in the query, all other requests will send the
+extra param in the body.
+
+If you want to explicitly send an extra argument, you can do so with the `query`, `body`, and `headers` request
+options.
+
+#### Undocumented response properties
+
+To access undocumented response properties, you may access the response object with `// @ts-expect-error` on
+the response object, or cast the response object to the requisite type. Like the request params, we do not
+validate or strip extra properties from the response from the API.
+
+### Customizing the fetch client
+
+By default, this library expects a global `fetch` function is defined.
+
+If you want to use a different `fetch` function, you can either polyfill the global:
+
+```ts
+import fetch from 'my-fetch';
+
+globalThis.fetch = fetch;
+```
+
+Or pass it to the client:
+
+```ts
+import Inbound from 'inboundemail';
+import fetch from 'my-fetch';
+
+const client = new Inbound({ fetch });
+```
+
+### Fetch options
+
+If you want to set custom `fetch` options without overriding the `fetch` function, you can provide a `fetchOptions` object when instantiating the client or making a request. (Request-specific options override client options.)
+
+```ts
+import Inbound from 'inboundemail';
+
+const client = new Inbound({
+  fetchOptions: {
+    // `RequestInit` options
+  },
+});
+```
+
+#### Configuring proxies
+
+To modify proxy behavior, you can provide custom `fetchOptions` that add runtime-specific proxy
+options to requests:
+
+<img src="https://raw.githubusercontent.com/stainless-api/sdk-assets/refs/heads/main/node.svg" align="top" width="18" height="21"> **Node** <sup>[[docs](https://github.com/nodejs/undici/blob/main/docs/docs/api/ProxyAgent.md#example---proxyagent-with-fetch)]</sup>
+
+```ts
+import Inbound from 'inboundemail';
+import * as undici from 'undici';
+
+const proxyAgent = new undici.ProxyAgent('http://localhost:8888');
+const client = new Inbound({
+  fetchOptions: {
+    dispatcher: proxyAgent,
+  },
+});
+```
+
+<img src="https://raw.githubusercontent.com/stainless-api/sdk-assets/refs/heads/main/bun.svg" align="top" width="18" height="21"> **Bun** <sup>[[docs](https://bun.sh/guides/http/proxy)]</sup>
+
+```ts
+import Inbound from 'inboundemail';
+
+const client = new Inbound({
+  fetchOptions: {
+    proxy: 'http://localhost:8888',
+  },
+});
+```
+
+<img src="https://raw.githubusercontent.com/stainless-api/sdk-assets/refs/heads/main/deno.svg" align="top" width="18" height="21"> **Deno** <sup>[[docs](https://docs.deno.com/api/deno/~/Deno.createHttpClient)]</sup>
+
+```ts
+import Inbound from 'npm:inboundemail';
+
+const httpClient = Deno.createHttpClient({ proxy: { url: 'http://localhost:8888' } });
+const client = new Inbound({
+  fetchOptions: {
+    client: httpClient,
+  },
+});
+```
+
+## Frequently Asked Questions
+
+## Semantic versioning
+
+This package generally follows [SemVer](https://semver.org/spec/v2.0.0.html) conventions, though certain backwards-incompatible changes may be released as minor versions:
+
+1. Changes that only affect static types, without breaking runtime behavior.
+2. Changes to library internals which are technically public but not intended or documented for external use. _(Please open a GitHub issue to let us know if you are relying on such internals.)_
+3. Changes that we do not expect to impact the vast majority of users in practice.
+
+We take backwards-compatibility seriously and work hard to ensure you can rely on a smooth upgrade experience.
+
+We are keen for your feedback; please open an [issue](https://www.github.com/stainless-sdks/inbound-typescript/issues) with questions, bugs, or suggestions.
+
+## Requirements
+
+TypeScript >= 4.9 is supported.
+
+The following runtimes are supported:
+
+- Web browsers (Up-to-date Chrome, Firefox, Safari, Edge, and more)
+- Node.js 20 LTS or later ([non-EOL](https://endoflife.date/nodejs)) versions.
+- Deno v1.28.0 or higher.
+- Bun 1.0 or later.
+- Cloudflare Workers.
+- Vercel Edge Runtime.
+- Jest 28 or greater with the `"node"` environment (`"jsdom"` is not supported at this time).
+- Nitro v2.6 or greater.
+
+Note that React Native is not supported at this time.
+
+If you are interested in other runtime environments, please open or upvote an issue on GitHub.
+
+## Contributing
+
+See [the contributing documentation](./CONTRIBUTING.md).
