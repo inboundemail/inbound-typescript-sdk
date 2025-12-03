@@ -457,9 +457,9 @@ export interface DomainListParams {
 
   check?: 'true';
 
-  limit?: string | number;
+  limit?: number;
 
-  offset?: string | number;
+  offset?: number;
 
   status?: 'pending' | 'verified' | 'failed';
 }
