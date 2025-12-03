@@ -65,7 +65,7 @@ export interface DomainCreateResponse {
 
   canReceiveEmails: boolean;
 
-  createdAt: unknown | (string & {}) | (string & {}) | number;
+  createdAt: string;
 
   dnsRecords: Array<DomainCreateResponse.DNSRecord>;
 
@@ -79,7 +79,7 @@ export interface DomainCreateResponse {
 
   status: 'pending' | 'verified' | 'failed';
 
-  updatedAt: unknown | (string & {}) | (string & {}) | number;
+  updatedAt: string;
 
   dnsConflict?: DomainCreateResponse.DNSConflict;
 
@@ -131,7 +131,7 @@ export interface DomainRetrieveResponse {
 
   catchAllEndpointId: string | null;
 
-  createdAt: unknown | (string & {}) | (string & {}) | number;
+  createdAt: string;
 
   dnsRecords: Array<DomainRetrieveResponse.DNSRecord>;
 
@@ -143,23 +143,25 @@ export interface DomainRetrieveResponse {
 
   isCatchAllEnabled: boolean;
 
-  lastDnsCheck: unknown | (string & {}) | (string & {}) | number | null;
+  lastDnsCheck: string | null;
 
-  lastSesCheck: unknown | (string & {}) | (string & {}) | number | null;
+  lastSesCheck: string | null;
 
   mailFromDomain: string | null;
 
   mailFromDomainStatus: string | null;
 
-  mailFromDomainVerifiedAt: unknown | (string & {}) | (string & {}) | number | null;
+  mailFromDomainVerifiedAt: string | null;
 
   providerConfidence: string | null;
+
+  receiveDmarcEmails: boolean;
 
   stats: DomainRetrieveResponse.Stats;
 
   status: string;
 
-  updatedAt: unknown | (string & {}) | (string & {}) | number;
+  updatedAt: string;
 
   userId: string;
 
@@ -178,7 +180,7 @@ export namespace DomainRetrieveResponse {
   export interface DNSRecord {
     id: string;
 
-    createdAt: unknown | (string & {}) | (string & {}) | number;
+    createdAt: string;
 
     domainId: string;
 
@@ -186,7 +188,7 @@ export namespace DomainRetrieveResponse {
 
     isVerified: boolean;
 
-    lastChecked: unknown | (string & {}) | (string & {}) | number | null;
+    lastChecked: string | null;
 
     name: string;
 
@@ -246,7 +248,7 @@ export namespace DomainRetrieveResponse {
 
     isFullyVerified: boolean;
 
-    lastChecked: unknown | (string & {}) | (string & {}) | number;
+    lastChecked: string;
 
     sesStatus: string;
 
@@ -289,7 +291,7 @@ export interface DomainUpdateResponse {
 
   status: string;
 
-  updatedAt: unknown | (string & {}) | (string & {}) | number;
+  updatedAt: string;
 
   catchAllEndpoint?: DomainUpdateResponse.CatchAllEndpoint | null;
 }
@@ -320,7 +322,7 @@ export namespace DomainListResponse {
 
     catchAllEndpointId: string | null;
 
-    createdAt: unknown | (string & {}) | (string & {}) | number;
+    createdAt: string;
 
     domain: string;
 
@@ -330,15 +332,15 @@ export namespace DomainListResponse {
 
     isCatchAllEnabled: boolean;
 
-    lastDnsCheck: unknown | (string & {}) | (string & {}) | number | null;
+    lastDnsCheck: string | null;
 
-    lastSesCheck: unknown | (string & {}) | (string & {}) | number | null;
+    lastSesCheck: string | null;
 
     mailFromDomain: string | null;
 
     mailFromDomainStatus: string | null;
 
-    mailFromDomainVerifiedAt: unknown | (string & {}) | (string & {}) | number | null;
+    mailFromDomainVerifiedAt: string | null;
 
     providerConfidence: string | null;
 
@@ -348,7 +350,7 @@ export namespace DomainListResponse {
 
     status: string;
 
-    updatedAt: unknown | (string & {}) | (string & {}) | number;
+    updatedAt: string;
 
     userId: string;
 
@@ -381,7 +383,7 @@ export namespace DomainListResponse {
 
       isFullyVerified: boolean;
 
-      lastChecked: unknown | (string & {}) | (string & {}) | number;
+      lastChecked: string;
 
       sesStatus: string;
     }
@@ -455,9 +457,9 @@ export interface DomainListParams {
 
   check?: 'true';
 
-  limit?: number;
+  limit?: string | number;
 
-  offset?: number;
+  offset?: string | number;
 
   status?: 'pending' | 'verified' | 'failed';
 }

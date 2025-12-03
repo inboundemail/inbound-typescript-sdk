@@ -66,7 +66,7 @@ export interface EmailAddressCreateResponse {
 
   address: string;
 
-  createdAt: unknown | (string & {}) | (string & {}) | number;
+  createdAt: string;
 
   domain: EmailAddressCreateResponse.Domain;
 
@@ -82,7 +82,7 @@ export interface EmailAddressCreateResponse {
 
   routing: EmailAddressCreateResponse.Routing;
 
-  updatedAt: unknown | (string & {}) | (string & {}) | number;
+  updatedAt: string;
 
   userId: string;
 
@@ -118,7 +118,7 @@ export interface EmailAddressRetrieveResponse {
 
   address: string;
 
-  createdAt: unknown | (string & {}) | (string & {}) | number;
+  createdAt: string;
 
   domain: EmailAddressRetrieveResponse.Domain;
 
@@ -134,7 +134,7 @@ export interface EmailAddressRetrieveResponse {
 
   routing: EmailAddressRetrieveResponse.Routing;
 
-  updatedAt: unknown | (string & {}) | (string & {}) | number;
+  updatedAt: string;
 
   userId: string;
 
@@ -168,7 +168,7 @@ export interface EmailAddressUpdateResponse {
 
   address: string;
 
-  createdAt: unknown | (string & {}) | (string & {}) | number;
+  createdAt: string;
 
   domain: EmailAddressUpdateResponse.Domain;
 
@@ -184,7 +184,7 @@ export interface EmailAddressUpdateResponse {
 
   routing: EmailAddressUpdateResponse.Routing;
 
-  updatedAt: unknown | (string & {}) | (string & {}) | number;
+  updatedAt: string;
 
   userId: string;
 
@@ -227,7 +227,7 @@ export namespace EmailAddressListResponse {
 
     address: string;
 
-    createdAt: unknown | (string & {}) | (string & {}) | number;
+    createdAt: string;
 
     domain: Data.Domain;
 
@@ -243,7 +243,7 @@ export namespace EmailAddressListResponse {
 
     routing: Data.Routing;
 
-    updatedAt: unknown | (string & {}) | (string & {}) | number;
+    updatedAt: string;
 
     userId: string;
 
