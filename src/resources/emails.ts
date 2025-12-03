@@ -213,6 +213,9 @@ export interface EmailReplyParams {
 
   attachments?: Array<EmailReplyParams.Attachment>;
 
+  /**
+   * Custom email headers
+   */
   headers?: unknown;
 
   /**
@@ -296,6 +299,9 @@ export interface EmailSendParams {
 
   cc?: string | Array<string>;
 
+  /**
+   * Custom email headers
+   */
   headers?: unknown;
 
   /**
