@@ -4,7 +4,7 @@
 
 This library provides convenient access to the Inbound REST API from server-side TypeScript or JavaScript.
 
-The full API of this library can be found in [api.md](api.md).
+The REST API documentation can be found on [inbound.new](https://inbound.new/docs). The full API of this library can be found in [api.md](api.md).
 
 It is generated with [Stainless](https://www.stainless.com/).
 
