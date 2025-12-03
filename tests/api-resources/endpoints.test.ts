@@ -71,7 +71,14 @@ describe('resource endpoints', () => {
     // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
     await expect(
       client.endpoints.list(
-        { active: 'true', limit: 1, offset: 0, search: 'search', sortBy: 'newest', type: 'webhook' },
+        {
+          active: 'true',
+          limit: 'string',
+          offset: 'string',
+          search: 'search',
+          sortBy: 'newest',
+          type: 'webhook',
+        },
         { path: '/_stainless_unknown_path' },
       ),
     ).rejects.toThrow(Inbound.NotFoundError);
