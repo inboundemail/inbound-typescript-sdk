@@ -391,9 +391,9 @@ export namespace EndpointUpdateParams {
 export interface EndpointListParams {
   active?: 'true' | 'false';
 
-  limit?: string | number;
+  limit?: number;
 
-  offset?: string | number;
+  offset?: number;
 
   search?: string;
 
