@@ -82,14 +82,12 @@ Methods:
 
 # Mail
 
-## Threads
-
 Types:
 
-- <code><a href="./src/resources/mail/threads.ts">ThreadRetrieveResponse</a></code>
-- <code><a href="./src/resources/mail/threads.ts">ThreadListResponse</a></code>
+- <code><a href="./src/resources/mail.ts">MailRetrieveResponse</a></code>
+- <code><a href="./src/resources/mail.ts">MailListResponse</a></code>
 
 Methods:
 
-- <code title="get /api/e2/mail/threads/{id}">client.mail.threads.<a href="./src/resources/mail/threads.ts">retrieve</a>(id) -> ThreadRetrieveResponse</code>
-- <code title="get /api/e2/mail/threads">client.mail.threads.<a href="./src/resources/mail/threads.ts">list</a>({ ...params }) -> ThreadListResponse</code>
+- <code title="get /api/e2/mail/threads/{id}">client.mail.<a href="./src/resources/mail.ts">retrieve</a>(id) -> MailRetrieveResponse</code>
+- <code title="get /api/e2/mail/threads">client.mail.<a href="./src/resources/mail.ts">list</a>({ ...params }) -> MailListResponse</code>

@@ -7,10 +7,10 @@ const client = new Inbound({
   baseURL: process.env['TEST_API_BASE_URL'] ?? 'http://127.0.0.1:4010',
 });
 
-describe('resource threads', () => {
+describe('resource mail', () => {
   // Prism tests are disabled
   test.skip('retrieve', async () => {
-    const responsePromise = client.mail.threads.retrieve('id');
+    const responsePromise = client.mail.retrieve('id');
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -22,7 +22,7 @@ describe('resource threads', () => {
 
   // Prism tests are disabled
   test.skip('list', async () => {
-    const responsePromise = client.mail.threads.list();
+    const responsePromise = client.mail.list();
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -36,7 +36,7 @@ describe('resource threads', () => {
   test.skip('list: request options and params are passed correctly', async () => {
     // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
     await expect(
-      client.mail.threads.list(
+      client.mail.list(
         {
           address: 'address',
           cursor: 'cursor',
