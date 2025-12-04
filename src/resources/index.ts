@@ -50,4 +50,4 @@ export {
   type EndpointListParams,
   type EndpointTestParams,
 } from './endpoints';
-export { Mail } from './mail/mail';
+export { Mail, type MailRetrieveResponse, type MailListResponse, type MailListParams } from './mail';
