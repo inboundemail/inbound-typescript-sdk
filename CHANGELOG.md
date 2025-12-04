@@ -6,6 +6,14 @@ Full Changelog: [v0.6.0...v0.7.0](https://github.com/inboundemail/inbound-typesc
 
 ### Features
 
+* **api:** manual updates ([99dd897](https://github.com/inboundemail/inbound-typescript-sdk/commit/99dd897c42d2ddc60d789b6fa15957837fec6931))
+
+## 0.7.0 (2025-12-04)
+
+Full Changelog: [v0.6.0...v0.7.0](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.6.0...v0.7.0)
+
+### Features
+
 * **api:** api update ([d0ed367](https://github.com/inboundemail/inbound-typescript-sdk/commit/d0ed367d406c1cba01adb22d41355c785ce3fa08))
 
 ## 0.6.0 (2025-12-03)
