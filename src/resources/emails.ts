@@ -15,8 +15,39 @@ export class Emails extends APIResource {
   }
 
   /**
-   * List all emails with optional filtering by type (sent/received/scheduled),
-   * status, domain, or address. Supports pagination.
+   * List all email activity (sent, received, and scheduled) with comprehensive
+   * filtering options.
+   *
+   * **Type Filtering:**
+   *
+   * - `all` - Returns sent, received, and scheduled emails combined (default)
+   * - `sent` - Only outbound emails you've sent
+   * - `received` - Only inbound emails you've received
+   * - `scheduled` - Only emails scheduled for future delivery
+   *
+   * **Status Filtering:**
+   *
+   * - `delivered` - Successfully delivered emails
+   * - `pending` - Emails currently being processed
+   * - `failed` - Emails that failed to deliver
+   * - `bounced` - Emails that bounced (sent only)
+   * - `scheduled` - Emails scheduled for future delivery
+   * - `cancelled` - Cancelled scheduled emails
+   * - `unread` - Unread received emails
+   * - `read` - Read received emails
+   * - `archived` - Archived received emails
+   *
+   * **Time Range Filtering:**
+   *
+   * - `1h` - Last hour
+   * - `24h` - Last 24 hours
+   * - `7d` - Last 7 days
+   * - `30d` - Last 30 days (default)
+   * - `90d` - Last 90 days
+   * - `all` - All time
+   *
+   * **Address Filtering:** Supports filtering by domain ID, domain name, address ID,
+   * or raw email address (e.g., 'user@example.com').
    */
   list(
     query: EmailListParams | null | undefined = {},
@@ -114,43 +145,175 @@ export interface EmailRetrieveResponse {
 }
 
 export interface EmailListResponse {
+  /**
+   * Array of email objects matching the query
+   */
   data: Array<EmailListResponse.Data>;
 
+  /**
+   * Applied filters for this query
+   */
+  filters: EmailListResponse.Filters;
+
+  /**
+   * Pagination metadata
+   */
   pagination: EmailListResponse.Pagination;
 }
 
 export namespace EmailListResponse {
   export interface Data {
+    /**
+     * Unique identifier for the email
+     */
     id: string;
 
+    /**
+     * ISO 8601 timestamp when the email was created/received
+     */
     created_at: string;
 
+    /**
+     * Sender email address
+     */
     from: string;
 
+    /**
+     * Whether the email has any attachments
+     */
     has_attachments: boolean;
 
+    /**
+     * Current status of the email (delivered, pending, failed, bounced, scheduled,
+     * cancelled)
+     */
     status: string;
 
+    /**
+     * Email subject line
+     */
     subject: string;
 
+    /**
+     * Array of recipient email addresses
+     */
     to: Array<string>;
 
     type: 'sent' | 'received' | 'scheduled';
 
+    /**
+     * Number of attachments on the email
+     */
+    attachment_count?: number;
+
+    /**
+     * Array of CC recipient email addresses
+     */
+    cc?: Array<string>;
+
+    /**
+     * Sender display name if available
+     */
+    from_name?: string | null;
+
+    /**
+     * Whether the email has been archived (only for received emails)
+     */
+    is_archived?: boolean;
+
+    /**
+     * Whether the email has been read (only for received emails)
+     */
     is_read?: boolean;
 
+    /**
+     * RFC 2822 Message-ID header value
+     */
+    message_id?: string | null;
+
+    /**
+     * First 200 characters of the email body as a preview
+     */
+    preview?: string | null;
+
+    /**
+     * ISO 8601 timestamp when the email was marked as read (only for received emails)
+     */
+    read_at?: string | null;
+
+    /**
+     * ISO 8601 timestamp when the email is scheduled to be sent
+     */
     scheduled_at?: string | null;
 
+    /**
+     * ISO 8601 timestamp when the email was sent
+     */
     sent_at?: string | null;
+
+    /**
+     * ID of the thread this email belongs to, if threaded
+     */
+    thread_id?: string | null;
   }
 
+  /**
+   * Applied filters for this query
+   */
+  export interface Filters {
+    /**
+     * Applied address filter
+     */
+    address?: string;
+
+    /**
+     * Applied domain filter
+     */
+    domain?: string;
+
+    /**
+     * Applied search query
+     */
+    search?: string;
+
+    /**
+     * Applied status filter
+     */
+    status?: string;
+
+    /**
+     * Applied time range filter
+     */
+    time_range?: string;
+
+    /**
+     * Applied type filter
+     */
+    type?: string;
+  }
+
+  /**
+   * Pagination metadata
+   */
   export interface Pagination {
+    /**
+     * Whether there are more results available
+     */
     has_more: boolean;
 
+    /**
+     * Number of results per page
+     */
     limit: number;
 
+    /**
+     * Number of results skipped
+     */
     offset: number;
 
+    /**
+     * Total number of matching emails
+     */
     total: number;
   }
 }
@@ -192,15 +355,47 @@ export interface EmailSendResponse {
 }
 
 export interface EmailListParams {
+  /**
+   * Filter by email address. Accepts address ID (e.g., 'addr_xxx') or raw email
+   * address (e.g., 'user@example.com').
+   */
   address?: string;
 
+  /**
+   * Filter by domain. Accepts domain ID (e.g., 'dom_xxx') or domain name (e.g.,
+   * 'example.com').
+   */
   domain?: string;
 
+  /**
+   * Maximum number of emails to return (1-100). Default is 50.
+   */
   limit?: string;
 
+  /**
+   * Number of emails to skip for pagination. Default is 0.
+   */
   offset?: string;
 
-  status?: 'delivered' | 'pending' | 'failed' | 'bounced' | 'scheduled' | 'cancelled';
+  /**
+   * Search query to filter emails by subject, sender, or recipient. Case-insensitive
+   * partial match.
+   */
+  search?: string;
+
+  status?:
+    | 'all'
+    | 'delivered'
+    | 'pending'
+    | 'failed'
+    | 'bounced'
+    | 'scheduled'
+    | 'cancelled'
+    | 'unread'
+    | 'read'
+    | 'archived';
+
+  time_range?: '1h' | '24h' | '7d' | '30d' | '90d' | 'all';
 
   type?: 'all' | 'sent' | 'received' | 'scheduled';
 }

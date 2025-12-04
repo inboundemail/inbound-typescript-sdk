@@ -9,7 +9,8 @@ import { path } from '../internal/utils/path';
 export class Domains extends APIResource {
   /**
    * Add a new domain for email receiving. Automatically initiates SES verification
-   * and returns required DNS records.
+   * and returns required DNS records. Subdomains inherit verification from their
+   * verified parent domain.
    */
   create(body: DomainCreateParams, options?: RequestOptions): APIPromise<DomainCreateResponse> {
     return this._client.post(
@@ -20,7 +21,7 @@ export class Domains extends APIResource {
 
   /**
    * Get detailed information about a specific domain including DNS records. Use
-   * ?check=true for live verification.
+   * `?check=true` for live DNS and SES verification.
    */
   retrieve(
     id: string,
@@ -31,8 +32,8 @@ export class Domains extends APIResource {
   }
 
   /**
-   * Update catch-all email settings for a domain. Domain must be verified to
-   * configure catch-all.
+   * Update catch-all email settings for a domain. Catch-all receives emails sent to
+   * any address on your domain. Domain must be verified first.
    */
   update(id: string, body: DomainUpdateParams, options?: RequestOptions): APIPromise<DomainUpdateResponse> {
     return this._client.patch(
@@ -42,7 +43,7 @@ export class Domains extends APIResource {
   }
 
   /**
-   * Get paginated list of domains for authenticated user with optional filtering
+   * Get paginated list of domains for authenticated user with optional filtering.
    */
   list(
     query: DomainListParams | null | undefined = {},
@@ -53,7 +54,8 @@ export class Domains extends APIResource {
 
   /**
    * Delete a domain and all associated resources including email addresses, DNS
-   * records, and SES configurations.
+   * records, and SES configurations. Root domains with subdomains must have
+   * subdomains deleted first.
    */
   delete(id: string, options?: RequestOptions): APIPromise<DomainDeleteResponse> {
     return this._client.delete(path`/api/e2/domains/${id}`, options);
@@ -457,9 +459,9 @@ export interface DomainListParams {
 
   check?: 'true';
 
-  limit?: string | number;
+  limit?: number;
 
-  offset?: string | number;
+  offset?: number;
 
   status?: 'pending' | 'verified' | 'failed';
 }
