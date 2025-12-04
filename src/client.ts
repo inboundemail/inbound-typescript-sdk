@@ -66,7 +66,7 @@ import {
   EndpointUpdateResponse,
   Endpoints,
 } from './resources/endpoints';
-import { Mail } from './resources/mail/mail';
+import { Mail, MailListParams, MailListResponse, MailRetrieveResponse } from './resources/mail';
 import { type Fetch } from './internal/builtin-types';
 import { HeadersLike, NullableHeaders, buildHeaders } from './internal/headers';
 import { FinalRequestOptions, RequestOptions } from './internal/request-options';
@@ -837,5 +837,10 @@ export declare namespace Inbound {
     type EmailSendParams as EmailSendParams,
   };
 
-  export { Mail as Mail };
+  export {
+    Mail as Mail,
+    type MailRetrieveResponse as MailRetrieveResponse,
+    type MailListResponse as MailListResponse,
+    type MailListParams as MailListParams,
+  };
 }
