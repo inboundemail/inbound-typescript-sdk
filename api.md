@@ -82,14 +82,6 @@ Methods:
 
 # Mail
 
-Types:
-
-- <code><a href="./src/resources/mail/mail.ts">MailListResponse</a></code>
-
-Methods:
-
-- <code title="get /api/e2/mail">client.mail.<a href="./src/resources/mail/mail.ts">list</a>({ ...params }) -> MailListResponse</code>
-
 ## Threads
 
 Types:
