@@ -290,6 +290,12 @@ export namespace MailRetrieveResponse {
     participant_emails: Array<string>;
 
     /**
+     * Array of formatted participant names in the format 'First Last
+     * <email@domain.com>' or just 'email@domain.com' if no name is available
+     */
+    participant_names: Array<string>;
+
+    /**
      * RFC 2822 Message-ID of the first message in the thread
      */
     root_message_id: string;
@@ -406,6 +412,12 @@ export namespace MailListResponse {
      * Array of all unique email addresses that have participated in this thread
      */
     participant_emails: Array<string>;
+
+    /**
+     * Array of formatted participant names in the format 'First Last
+     * <email@domain.com>' or just 'email@domain.com' if no name is available
+     */
+    participant_names: Array<string>;
 
     /**
      * RFC 2822 Message-ID of the first message in the thread
