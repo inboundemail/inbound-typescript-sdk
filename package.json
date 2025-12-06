@@ -1,6 +1,6 @@
 {
   "name": "inboundemail",
-  "version": "0.15.1",
+  "version": "0.15.2",
   "description": "The official TypeScript library for the Inbound API",
   "author": "Inbound <sdk@inbound.new>",
   "types": "dist/index.d.ts",
