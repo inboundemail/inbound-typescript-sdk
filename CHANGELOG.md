@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.2 (2025-12-06)
+
+Full Changelog: [v0.15.1...v0.15.2](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.15.1...v0.15.2)
+
+### Bug Fixes
+
+* **mcp:** correct code tool API endpoint ([1f2626e](https://github.com/inboundemail/inbound-typescript-sdk/commit/1f2626e602890c1f5bbd63020f531c24cd74779f))
+
 ## 0.15.1 (2025-12-06)
 
 Full Changelog: [v0.15.0...v0.15.1](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.15.0...v0.15.1)
