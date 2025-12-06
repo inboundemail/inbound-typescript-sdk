@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.15.1 (2025-12-06)
+
+Full Changelog: [v0.15.0...v0.15.1](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.15.0...v0.15.1)
+
+### Bug Fixes
+
+* **mcp:** return correct lines on typescript errors ([d921219](https://github.com/inboundemail/inbound-typescript-sdk/commit/d92121940d3717712aa85e3ab2861b617fd156cf))
+
+
+### Chores
+
+* **internal:** codegen related update ([3db7774](https://github.com/inboundemail/inbound-typescript-sdk/commit/3db777450eb2db36a0cc8aa2c0a7afce6888f8cd))
+* **internal:** configure pnpm minimumReleaseAge to 1 day ([caa027c](https://github.com/inboundemail/inbound-typescript-sdk/commit/caa027c59841de6e58751afab1a7730cefeb4cc0))
+
 ## 0.15.0 (2025-12-05)
 
 Full Changelog: [v0.14.0...v0.15.0](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.14.0...v0.15.0)
