@@ -5,6 +5,18 @@ import { APIPromise } from '../core/api-promise';
 import { RequestOptions } from '../internal/request-options';
 import { maybeMultipartFormRequestOptions } from '../internal/uploads';
 import { path } from '../internal/utils/path';
+import { render } from '../lib/render';
+
+/**
+ * Helper to process email body, rendering React components if present
+ */
+async function processEmailBody<T extends { react?: unknown; html?: string }>(body: T): Promise<T> {
+  if (body.react) {
+    body.html = await render(body.react);
+    delete body.react;
+  }
+  return body;
+}
 
 export class Emails extends APIResource {
   /**
@@ -66,9 +78,23 @@ export class Emails extends APIResource {
 
   /**
    * Reply to an email or thread. Accepts either an email ID or thread ID (replies to
-   * latest message in thread). Supports reply all functionality.
+   * latest message in thread). Supports reply all functionality and React components.
+   *
+   * Note: When using the `react` option, this method returns a Promise instead of APIPromise.
    */
-  reply(id: string, body: EmailReplyParams, options?: RequestOptions): APIPromise<EmailReplyResponse> {
+  reply(
+    id: string,
+    body: EmailReplyParams,
+    options?: RequestOptions,
+  ): APIPromise<EmailReplyResponse> | Promise<EmailReplyResponse> {
+    if (body.react) {
+      return processEmailBody(body).then((processedBody) =>
+        this._client.post(
+          path`/api/e2/emails/${id}/reply`,
+          maybeMultipartFormRequestOptions({ body: processedBody, ...options }, this._client),
+        ),
+      );
+    }
     return this._client.post(
       path`/api/e2/emails/${id}/reply`,
       maybeMultipartFormRequestOptions({ body, ...options }, this._client),
@@ -88,9 +114,22 @@ export class Emails extends APIResource {
 
   /**
    * Send an email immediately or schedule it for later using the scheduled_at
-   * parameter. Supports HTML/text content, attachments, and custom headers.
+   * parameter. Supports HTML/text content, attachments, React components, and custom headers.
+   *
+   * Note: When using the `react` option, this method returns a Promise instead of APIPromise.
    */
-  send(body: EmailSendParams, options?: RequestOptions): APIPromise<EmailSendResponse> {
+  send(
+    body: EmailSendParams,
+    options?: RequestOptions,
+  ): APIPromise<EmailSendResponse> | Promise<EmailSendResponse> {
+    if (body.react) {
+      return processEmailBody(body).then((processedBody) =>
+        this._client.post(
+          '/api/e2/emails',
+          maybeMultipartFormRequestOptions({ body: processedBody, ...options }, this._client),
+        ),
+      );
+    }
     return this._client.post(
       '/api/e2/emails',
       maybeMultipartFormRequestOptions({ body, ...options }, this._client),
@@ -419,6 +458,22 @@ export interface EmailReplyParams {
   html?: string;
 
   /**
+   * The React component used to write the message.
+   * Requires `@react-email/render` to be installed.
+   *
+   * @example
+   * ```ts
+   * import { MyEmailTemplate } from './emails/my-template';
+   *
+   * await client.emails.reply('email_id', {
+   *   from: 'sender@example.com',
+   *   react: <MyEmailTemplate name="John" />,
+   * });
+   * ```
+   */
+  react?: unknown;
+
+  /**
    * Include original CC recipients
    */
   reply_all?: boolean;
@@ -503,6 +558,24 @@ export interface EmailSendParams {
    * HTML content of the email
    */
   html?: string;
+
+  /**
+   * The React component used to write the message.
+   * Requires `@react-email/render` to be installed.
+   *
+   * @example
+   * ```ts
+   * import { MyEmailTemplate } from './emails/my-template';
+   *
+   * await client.emails.send({
+   *   from: 'sender@example.com',
+   *   to: 'recipient@example.com',
+   *   subject: 'Hello',
+   *   react: <MyEmailTemplate name="John" />,
+   * });
+   * ```
+   */
+  react?: unknown;
 
   reply_to?: string | Array<string>;
 

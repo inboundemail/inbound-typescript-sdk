@@ -20,3 +20,4 @@ export {
   PermissionDeniedError,
   UnprocessableEntityError,
 } from './core/error';
+export { render } from './lib/render';
