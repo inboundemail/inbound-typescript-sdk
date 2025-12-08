@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.18.0 (2025-12-08)
+
+Full Changelog: [v0.17.0...v0.18.0](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.17.0...v0.18.0)
+
+### Features
+
+* add React Email support for send() and reply() methods ([c681f1b](https://github.com/inboundemail/inbound-typescript-sdk/commit/c681f1b9dbf7faa62fdaf2a2cf4d0e3c056dc339))
+
 ## 0.17.0 (2025-12-08)
 
 Full Changelog: [v0.16.0...v0.17.0](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.16.0...v0.17.0)
