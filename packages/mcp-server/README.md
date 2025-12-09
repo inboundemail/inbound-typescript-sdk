@@ -246,8 +246,8 @@ The following tools are available in this MCP server.
 
 ### Resource `domains`:
 
-- `create_domains` (`write`): Add a new domain for email receiving. Automatically initiates SES verification and returns required DNS records. Subdomains inherit verification from their verified parent domain.
-- `retrieve_domains` (`read`): Get detailed information about a specific domain including DNS records. Use `?check=true` for live DNS and SES verification.
+- `create_domains` (`write`): Add a new domain for email receiving. Automatically initiates verification and returns required DNS records. Subdomains inherit verification from their verified parent domain.
+- `retrieve_domains` (`read`): Get detailed information about a specific domain including DNS records. Use `?check=true` for a live verification check.
 - `update_domains` (`write`): Update catch-all email settings for a domain. Catch-all receives emails sent to any address on your domain. Domain must be verified first.
 - `list_domains` (`read`): Get paginated list of domains for authenticated user with optional filtering.
 - `delete_domains` (`write`): Delete a domain and all associated resources including email addresses, DNS records, and SES configurations. Root domains with subdomains must have subdomains deleted first.
@@ -263,48 +263,16 @@ The following tools are available in this MCP server.
 
 ### Resource `email_addresses`:
 
-- `create_email_addresses` (`write`): Create a new email address for an authenticated user's domain. Automatically configures AWS SES receipt rules.
+- `create_email_addresses` (`write`): Create a new email address for an authenticated user's domain, optionally routing to a webhook or endpoint.
 - `retrieve_email_addresses` (`read`): Get a specific email address by ID with detailed information including routing configuration
 - `update_email_addresses` (`write`): Update an email address's routing (endpoint/webhook) or active status. Cannot have both endpoint and webhook.
 - `list_email_addresses` (`read`): Get paginated list of email addresses for authenticated user with optional filtering by domain, active status, and receipt rule configuration
-- `delete_email_addresses` (`write`): Delete an email address and clean up associated SES receipt rules. Returns cleanup status.
+- `delete_email_addresses` (`write`): Delete an email address. Returns cleanup status.
 
 ### Resource `emails`:
 
 - `retrieve_emails` (`read`): Retrieve a single email by ID. Works for sent, received, and scheduled emails.
 - `list_emails` (`read`): List all email activity (sent, received, and scheduled) with comprehensive filtering options.
-
-  **Type Filtering:**
-
-  - `all` - Returns sent, received, and scheduled emails combined (default)
-  - `sent` - Only outbound emails you've sent
-  - `received` - Only inbound emails you've received
-  - `scheduled` - Only emails scheduled for future delivery
-
-  **Status Filtering:**
-
-  - `delivered` - Successfully delivered emails
-  - `pending` - Emails currently being processed
-  - `failed` - Emails that failed to deliver
-  - `bounced` - Emails that bounced (sent only)
-  - `scheduled` - Emails scheduled for future delivery
-  - `cancelled` - Cancelled scheduled emails
-  - `unread` - Unread received emails
-  - `read` - Read received emails
-  - `archived` - Archived received emails
-
-  **Time Range Filtering:**
-
-  - `1h` - Last hour
-  - `24h` - Last 24 hours
-  - `7d` - Last 7 days
-  - `30d` - Last 30 days (default)
-  - `90d` - Last 90 days
-  - `all` - All time
-
-  **Address Filtering:**
-  Supports filtering by domain ID, domain name, address ID, or raw email address (e.g., 'user@example.com').
-
 - `delete_emails` (`write`): Cancel a scheduled email by ID. Only works for emails that haven't been sent yet.
 - `reply_emails` (`write`): Reply to an email or thread. Accepts either an email ID or thread ID (replies to latest message in thread). Supports reply all functionality.
 - `retry_emails` (`write`): Retry delivery of a received email. Can retry to a specific endpoint, retry a specific failed delivery, or retry to all configured endpoints.
@@ -325,44 +293,10 @@ The following tools are available in this MCP server.
   - `inbound` - Emails you received
   - `outbound` - Emails you sent (includes delivery status)
 
-  **Message Content:**
-  Each message includes:
-
-  - Full body content (text and HTML)
-  - Sender and recipient information
-  - Attachments metadata
-  - Read status and timestamps
-  - Threading headers (In-Reply-To, References)
-
-  **Typical Workflow:**
-
-  1. List threads using `GET /mail/threads`
-  2. User clicks a thread
-  3. Fetch full thread using this endpoint
-  4. Display conversation view with all messages
-
 - `list_mail` (`read`): List email threads (conversations) for your inbox with cursor-based pagination. This is the primary endpoint for building an inbox UI.
 
   **What is a Thread?**
   A thread groups related emails together based on the In-Reply-To and References headers, similar to how Gmail groups conversations. Each thread contains both inbound (received) and outbound (sent) messages.
-
-  **Filtering:**
-
-  - `domain` - Filter by domain ID or name (e.g., 'example.com'). Returns threads where any participant matches the domain.
-  - `address` - Filter by email address (e.g., 'user@example.com'). Returns threads where the address is a participant.
-  - `search` - Search in subject lines and participant emails.
-  - `unread` - Set to 'true' to only return threads with unread messages.
-
-  **Pagination:**
-  Uses cursor-based pagination for efficient infinite scroll. Pass `pagination.next_cursor` from the response as the `cursor` parameter to get the next page.
-
-  **Response:**
-  Each thread includes:
-
-  - Thread metadata (subject, participants, message count)
-  - `latest_message` - Preview of the most recent message (inbound or outbound)
-  - `has_unread` - Whether there are unread inbound messages
-  - `unread_count` - Number of unread messages
 
   **Use with /mail/threads/:id:**
   Use this endpoint to list threads, then use `GET /mail/threads/:id` to fetch all messages in a specific thread.
