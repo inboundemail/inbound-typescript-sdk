@@ -29,6 +29,7 @@ export const tool: Tool = {
         anyOf: [
           {
             type: 'object',
+            title: 'WebhookConfig',
             properties: {
               url: {
                 type: 'string',
@@ -49,6 +50,7 @@ export const tool: Tool = {
           },
           {
             type: 'object',
+            title: 'EmailConfig',
             properties: {
               forwardTo: {
                 type: 'string',
@@ -61,6 +63,7 @@ export const tool: Tool = {
           },
           {
             type: 'object',
+            title: 'EmailGroupConfig',
             properties: {
               emails: {
                 type: 'array',
