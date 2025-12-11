@@ -308,9 +308,9 @@ export interface EndpointTestResponse {
 
 export interface EndpointCreateParams {
   config:
-    | EndpointCreateParams.WebhookConfig
-    | EndpointCreateParams.EmailConfig
-    | EndpointCreateParams.EmailGroupConfig;
+    | EndpointCreateParams.UnionMember0
+    | EndpointCreateParams.UnionMember1
+    | EndpointCreateParams.UnionMember2;
 
   name: string;
 
@@ -320,7 +320,7 @@ export interface EndpointCreateParams {
 }
 
 export namespace EndpointCreateParams {
-  export interface WebhookConfig {
+  export interface UnionMember0 {
     url: string;
 
     /**
@@ -333,13 +333,13 @@ export namespace EndpointCreateParams {
     timeout?: number;
   }
 
-  export interface EmailConfig {
+  export interface UnionMember1 {
     forwardTo: string;
 
     preserveHeaders?: boolean;
   }
 
-  export interface EmailGroupConfig {
+  export interface UnionMember2 {
     emails: Array<string>;
 
     preserveHeaders?: boolean;
@@ -348,9 +348,9 @@ export namespace EndpointCreateParams {
 
 export interface EndpointUpdateParams {
   config?:
-    | EndpointUpdateParams.WebhookConfig
-    | EndpointUpdateParams.EmailConfig
-    | EndpointUpdateParams.EmailGroupConfig;
+    | EndpointUpdateParams.UnionMember0
+    | EndpointUpdateParams.UnionMember1
+    | EndpointUpdateParams.UnionMember2;
 
   description?: string;
 
@@ -362,7 +362,7 @@ export interface EndpointUpdateParams {
 }
 
 export namespace EndpointUpdateParams {
-  export interface WebhookConfig {
+  export interface UnionMember0 {
     url: string;
 
     /**
@@ -375,13 +375,13 @@ export namespace EndpointUpdateParams {
     timeout?: number;
   }
 
-  export interface EmailConfig {
+  export interface UnionMember1 {
     forwardTo: string;
 
     preserveHeaders?: boolean;
   }
 
-  export interface EmailGroupConfig {
+  export interface UnionMember2 {
     emails: Array<string>;
 
     preserveHeaders?: boolean;
