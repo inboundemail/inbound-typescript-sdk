@@ -68,6 +68,7 @@ import {
 } from './resources/endpoints';
 import { Mail, MailListParams, MailListResponse, MailRetrieveResponse } from './resources/mail';
 import { type Fetch } from './internal/builtin-types';
+import { isRunningInBrowser } from './internal/detect-platform';
 import { HeadersLike, NullableHeaders, buildHeaders } from './internal/headers';
 import { FinalRequestOptions, RequestOptions } from './internal/request-options';
 import { readEnv } from './internal/utils/env';
@@ -201,6 +202,12 @@ export class Inbound {
       ...opts,
       baseURL: baseURL || `https://inbound.new`,
     };
+
+    if (isRunningInBrowser()) {
+      throw new Errors.InboundError(
+        "It looks like you're running in a browser-like environment, which is disabled to protect your secret API credentials from attackers. If you have a strong business need for client-side use of this API, please open a GitHub issue with your use-case and security mitigations.",
+      );
+    }
 
     this.baseURL = options.baseURL!;
     this.timeout = options.timeout ?? Inbound.DEFAULT_TIMEOUT /* 1 minute */;
@@ -631,7 +638,7 @@ export class Inbound {
 
   private calculateDefaultRetryTimeoutMillis(retriesRemaining: number, maxRetries: number): number {
     const initialRetryDelay = 0.5;
-    const maxRetryDelay = 8.0;
+    const maxRetryDelay = 5.0;
 
     const numRetries = maxRetries - retriesRemaining;
 

@@ -8,8 +8,8 @@ import { path } from '../internal/utils/path';
 
 export class Domains extends APIResource {
   /**
-   * Add a new domain for email receiving. Automatically initiates SES verification
-   * and returns required DNS records. Subdomains inherit verification from their
+   * Add a new domain for email receiving. Automatically initiates verification and
+   * returns required DNS records. Subdomains inherit verification from their
    * verified parent domain.
    */
   create(body: DomainCreateParams, options?: RequestOptions): APIPromise<DomainCreateResponse> {
@@ -21,7 +21,7 @@ export class Domains extends APIResource {
 
   /**
    * Get detailed information about a specific domain including DNS records. Use
-   * `?check=true` for live DNS and SES verification.
+   * `?check=true` for a live verification check.
    */
   retrieve(
     id: string,

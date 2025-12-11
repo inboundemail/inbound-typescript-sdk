@@ -8,8 +8,8 @@ import { path } from '../internal/utils/path';
 
 export class EmailAddresses extends APIResource {
   /**
-   * Create a new email address for an authenticated user's domain. Automatically
-   * configures AWS SES receipt rules.
+   * Create a new email address for an authenticated user's domain, optionally
+   * routing to a webhook or endpoint.
    */
   create(body: EmailAddressCreateParams, options?: RequestOptions): APIPromise<EmailAddressCreateResponse> {
     return this._client.post(
@@ -53,8 +53,7 @@ export class EmailAddresses extends APIResource {
   }
 
   /**
-   * Delete an email address and clean up associated SES receipt rules. Returns
-   * cleanup status.
+   * Delete an email address. Returns cleanup status.
    */
   delete(id: string, options?: RequestOptions): APIPromise<EmailAddressDeleteResponse> {
     return this._client.delete(path`/api/e2/email-addresses/${id}`, options);

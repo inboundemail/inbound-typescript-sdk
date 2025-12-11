@@ -19,21 +19,6 @@ export class Mail extends APIResource {
    *
    * - `inbound` - Emails you received
    * - `outbound` - Emails you sent (includes delivery status)
-   *
-   * **Message Content:** Each message includes:
-   *
-   * - Full body content (text and HTML)
-   * - Sender and recipient information
-   * - Attachments metadata
-   * - Read status and timestamps
-   * - Threading headers (In-Reply-To, References)
-   *
-   * **Typical Workflow:**
-   *
-   * 1. List threads using `GET /mail/threads`
-   * 2. User clicks a thread
-   * 3. Fetch full thread using this endpoint
-   * 4. Display conversation view with all messages
    */
   retrieve(id: string, options?: RequestOptions): APIPromise<MailRetrieveResponse> {
     return this._client.get(path`/api/e2/mail/threads/${id}`, options);
@@ -46,26 +31,6 @@ export class Mail extends APIResource {
    * **What is a Thread?** A thread groups related emails together based on the
    * In-Reply-To and References headers, similar to how Gmail groups conversations.
    * Each thread contains both inbound (received) and outbound (sent) messages.
-   *
-   * **Filtering:**
-   *
-   * - `domain` - Filter by domain ID or name (e.g., 'example.com'). Returns threads
-   *   where any participant matches the domain.
-   * - `address` - Filter by email address (e.g., 'user@example.com'). Returns
-   *   threads where the address is a participant.
-   * - `search` - Search in subject lines and participant emails.
-   * - `unread` - Set to 'true' to only return threads with unread messages.
-   *
-   * **Pagination:** Uses cursor-based pagination for efficient infinite scroll. Pass
-   * `pagination.next_cursor` from the response as the `cursor` parameter to get the
-   * next page.
-   *
-   * **Response:** Each thread includes:
-   *
-   * - Thread metadata (subject, participants, message count)
-   * - `latest_message` - Preview of the most recent message (inbound or outbound)
-   * - `has_unread` - Whether there are unread inbound messages
-   * - `unread_count` - Number of unread messages
    *
    * **Use with /mail/threads/:id:** Use this endpoint to list threads, then use
    * `GET /mail/threads/:id` to fetch all messages in a specific thread.
