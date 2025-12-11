@@ -31,10 +31,24 @@ export const tool: Tool = {
         enum: ['true'],
       },
       limit: {
-        type: 'number',
+        anyOf: [
+          {
+            type: 'string',
+          },
+          {
+            type: 'integer',
+          },
+        ],
       },
       offset: {
-        type: 'number',
+        anyOf: [
+          {
+            type: 'string',
+          },
+          {
+            type: 'integer',
+          },
+        ],
       },
       status: {
         type: 'string',
