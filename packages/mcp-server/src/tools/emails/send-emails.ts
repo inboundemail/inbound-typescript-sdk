@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export const tool: Tool = {
   name: 'send_emails',
   description:
-    "When using this tool, always use the `jq_filter` parameter to reduce the response size and improve performance.\n\nOnly omit if you're sure you don't need the data.\n\nSend an email immediately or schedule it for later using the scheduled_at parameter. Supports HTML/text content, attachments, and custom headers.\n\n# Response Schema\n```json\n{\n  $ref: '#/$defs/email_send_response',\n  $defs: {\n    email_send_response: {\n      type: 'object',\n      properties: {\n        id: {\n          type: 'string'\n        },\n        message_id: {\n          type: 'string'\n        }\n      },\n      required: [        'id'\n      ]\n    }\n  }\n}\n```",
+    "When using this tool, always use the `jq_filter` parameter to reduce the response size and improve performance.\n\nOnly omit if you're sure you don't need the data.\n\nSend an email immediately or schedule it for later using the scheduled_at parameter. Supports HTML/text content, attachments, and custom headers.\n\n# Response Schema\n```json\n{\n  $ref: '#/$defs/email_send_response',\n  $defs: {\n    email_send_response: {\n      type: 'object',\n      properties: {\n        id: {\n          type: 'string'\n        },\n        message_id: {\n          type: 'string'\n        },\n        scheduled_at: {\n          type: 'string'\n        },\n        status: {\n          type: 'string',\n          enum: [            'sent',\n            'scheduled'\n          ]\n        },\n        timezone: {\n          type: 'string'\n        }\n      },\n      required: [        'id'\n      ]\n    }\n  }\n}\n```",
   inputSchema: {
     type: 'object',
     properties: {
