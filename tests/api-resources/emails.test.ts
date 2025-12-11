@@ -81,7 +81,7 @@ describe('resource emails', () => {
     const response = await client.emails.reply('id', {
       from: 'from',
       attachments: [{ content: 'content', filename: 'filename', content_type: 'content_type', path: 'path' }],
-      headers: {},
+      headers: { foo: 'string' },
       html: 'html',
       reply_all: true,
       subject: 'subject',
@@ -124,7 +124,7 @@ describe('resource emails', () => {
       attachments: [{ content: 'content', filename: 'filename', content_type: 'content_type', path: 'path' }],
       bcc: 'string',
       cc: 'string',
-      headers: {},
+      headers: { foo: 'string' },
       html: 'html',
       reply_to: 'string',
       scheduled_at: 'scheduled_at',

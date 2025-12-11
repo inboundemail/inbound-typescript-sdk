@@ -327,9 +327,9 @@ export interface EmailAddressListParams {
 
   isReceiptRuleConfigured?: 'true' | 'false';
 
-  limit?: string | number;
+  limit?: number;
 
-  offset?: string | number;
+  offset?: number;
 }
 
 export declare namespace EmailAddresses {

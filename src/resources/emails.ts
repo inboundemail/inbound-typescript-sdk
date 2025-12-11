@@ -360,6 +360,12 @@ export interface EmailSendResponse {
   id: string;
 
   message_id?: string;
+
+  scheduled_at?: string;
+
+  status?: 'sent' | 'scheduled';
+
+  timezone?: string;
 }
 
 export interface EmailListParams {
@@ -419,7 +425,7 @@ export interface EmailReplyParams {
   /**
    * Custom email headers
    */
-  headers?: unknown;
+  headers?: { [key: string]: string };
 
   /**
    * HTML content of the email
@@ -521,7 +527,7 @@ export interface EmailSendParams {
   /**
    * Custom email headers
    */
-  headers?: unknown;
+  headers?: { [key: string]: string };
 
   /**
    * HTML content of the email

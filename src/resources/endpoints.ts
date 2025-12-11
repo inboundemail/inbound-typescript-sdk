@@ -308,9 +308,9 @@ export interface EndpointTestResponse {
 
 export interface EndpointCreateParams {
   config:
-    | EndpointCreateParams.UnionMember0
-    | EndpointCreateParams.UnionMember1
-    | EndpointCreateParams.UnionMember2;
+    | EndpointCreateParams.WebhookConfig
+    | EndpointCreateParams.EmailConfig
+    | EndpointCreateParams.EmailGroupConfig;
 
   name: string;
 
@@ -320,26 +320,26 @@ export interface EndpointCreateParams {
 }
 
 export namespace EndpointCreateParams {
-  export interface UnionMember0 {
+  export interface WebhookConfig {
     url: string;
 
     /**
      * Custom headers to include with webhook requests
      */
-    headers?: unknown;
+    headers?: { [key: string]: string };
 
     retryAttempts?: number;
 
     timeout?: number;
   }
 
-  export interface UnionMember1 {
+  export interface EmailConfig {
     forwardTo: string;
 
     preserveHeaders?: boolean;
   }
 
-  export interface UnionMember2 {
+  export interface EmailGroupConfig {
     emails: Array<string>;
 
     preserveHeaders?: boolean;
@@ -348,9 +348,9 @@ export namespace EndpointCreateParams {
 
 export interface EndpointUpdateParams {
   config?:
-    | EndpointUpdateParams.UnionMember0
-    | EndpointUpdateParams.UnionMember1
-    | EndpointUpdateParams.UnionMember2;
+    | EndpointUpdateParams.WebhookConfig
+    | EndpointUpdateParams.EmailConfig
+    | EndpointUpdateParams.EmailGroupConfig;
 
   description?: string;
 
@@ -362,26 +362,26 @@ export interface EndpointUpdateParams {
 }
 
 export namespace EndpointUpdateParams {
-  export interface UnionMember0 {
+  export interface WebhookConfig {
     url: string;
 
     /**
      * Custom headers to include with webhook requests
      */
-    headers?: unknown;
+    headers?: { [key: string]: string };
 
     retryAttempts?: number;
 
     timeout?: number;
   }
 
-  export interface UnionMember1 {
+  export interface EmailConfig {
     forwardTo: string;
 
     preserveHeaders?: boolean;
   }
 
-  export interface UnionMember2 {
+  export interface EmailGroupConfig {
     emails: Array<string>;
 
     preserveHeaders?: boolean;
@@ -391,9 +391,9 @@ export namespace EndpointUpdateParams {
 export interface EndpointListParams {
   active?: 'true' | 'false';
 
-  limit?: string | number;
+  limit?: number;
 
-  offset?: string | number;
+  offset?: number;
 
   search?: string;
 

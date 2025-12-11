@@ -23,7 +23,7 @@ describe('resource endpoints', () => {
   // Prism tests are disabled
   test.skip('create: required and optional params', async () => {
     const response = await client.endpoints.create({
-      config: { url: 'url', headers: {}, retryAttempts: 0, timeout: 1 },
+      config: { url: 'url', headers: { foo: 'string' }, retryAttempts: 0, timeout: 1 },
       name: 'x',
       type: 'webhook',
       description: 'description',
@@ -71,14 +71,7 @@ describe('resource endpoints', () => {
     // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
     await expect(
       client.endpoints.list(
-        {
-          active: 'true',
-          limit: 'string',
-          offset: 'string',
-          search: 'search',
-          sortBy: 'newest',
-          type: 'webhook',
-        },
+        { active: 'true', limit: 1, offset: 0, search: 'search', sortBy: 'newest', type: 'webhook' },
         { path: '/_stainless_unknown_path' },
       ),
     ).rejects.toThrow(Inbound.NotFoundError);
