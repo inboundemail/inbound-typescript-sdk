@@ -34,10 +34,24 @@ export const tool: Tool = {
         enum: ['true', 'false'],
       },
       limit: {
-        type: 'number',
+        anyOf: [
+          {
+            type: 'string',
+          },
+          {
+            type: 'integer',
+          },
+        ],
       },
       offset: {
-        type: 'number',
+        anyOf: [
+          {
+            type: 'string',
+          },
+          {
+            type: 'integer',
+          },
+        ],
       },
       jq_filter: {
         type: 'string',

@@ -386,7 +386,7 @@ export interface EmailReplyParams {
   /**
    * Custom email headers
    */
-  headers?: { [key: string]: string };
+  headers?: unknown;
 
   /**
    * HTML content of the email
@@ -472,7 +472,7 @@ export interface EmailSendParams {
   /**
    * Custom email headers
    */
-  headers?: { [key: string]: string };
+  headers?: unknown;
 
   /**
    * HTML content of the email

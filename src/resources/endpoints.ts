@@ -326,7 +326,7 @@ export namespace EndpointCreateParams {
     /**
      * Custom headers to include with webhook requests
      */
-    headers?: { [key: string]: string };
+    headers?: unknown;
 
     retryAttempts?: number;
 
@@ -368,7 +368,7 @@ export namespace EndpointUpdateParams {
     /**
      * Custom headers to include with webhook requests
      */
-    headers?: { [key: string]: string };
+    headers?: unknown;
 
     retryAttempts?: number;
 
@@ -391,9 +391,9 @@ export namespace EndpointUpdateParams {
 export interface EndpointListParams {
   active?: 'true' | 'false';
 
-  limit?: number;
+  limit?: string | number;
 
-  offset?: number;
+  offset?: string | number;
 
   search?: string;
 

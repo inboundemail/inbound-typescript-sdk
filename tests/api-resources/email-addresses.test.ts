@@ -72,7 +72,13 @@ describe('resource emailAddresses', () => {
     // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
     await expect(
       client.emailAddresses.list(
-        { domainId: 'domainId', isActive: 'true', isReceiptRuleConfigured: 'true', limit: 1, offset: 0 },
+        {
+          domainId: 'domainId',
+          isActive: 'true',
+          isReceiptRuleConfigured: 'true',
+          limit: 'string',
+          offset: 'string',
+        },
         { path: '/_stainless_unknown_path' },
       ),
     ).rejects.toThrow(Inbound.NotFoundError);
