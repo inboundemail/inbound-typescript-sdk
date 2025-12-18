@@ -35,7 +35,10 @@ export async function codeTool() {
       headers: {
         ...(stainlessAPIKey && { Authorization: stainlessAPIKey }),
         'Content-Type': 'application/json',
-        client_envs: JSON.stringify({ INBOUND_API_KEY: readEnv('INBOUND_API_KEY') }),
+        client_envs: JSON.stringify({
+          INBOUND_API_KEY: readEnv('INBOUND_API_KEY'),
+          INBOUND_BASE_URL: readEnv('INBOUND_BASE_URL'),
+        }),
       },
       body: JSON.stringify({
         project_name: 'inbound',
