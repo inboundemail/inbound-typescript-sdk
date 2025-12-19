@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.20.0 (2025-12-19)
+
+Full Changelog: [v0.19.0...v0.20.0](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.19.0...v0.20.0)
+
+### ⚠ BREAKING CHANGES
+
+* **mcp:** remove deprecated tool schemes
+* **mcp:** **Migration:** To migrate, simply modify the command used to invoke the MCP server. Currently, the only supported tool scheme is code mode. Now, starting the server with just `node /path/to/mcp/server` or `npx package-name` will invoke code tools: changing your command to one of these is likely all you will need to do.
+
+### Features
+
+* **api:** api update ([feb8844](https://github.com/inboundemail/inbound-typescript-sdk/commit/feb884455a3fceda6cf1968a10d6553299e98400))
+* **api:** api update ([b7926ec](https://github.com/inboundemail/inbound-typescript-sdk/commit/b7926ec7c9dfea912995ec1e1be0cb89a02f2448))
+* **api:** api update ([ba47317](https://github.com/inboundemail/inbound-typescript-sdk/commit/ba473173ccab81066589006e8f905a40c595d40f))
+* **api:** api update ([d2fb94d](https://github.com/inboundemail/inbound-typescript-sdk/commit/d2fb94d3af9c8ebaa77723d40c7710c8c8ba2ed6))
+* **api:** api update ([2299442](https://github.com/inboundemail/inbound-typescript-sdk/commit/22994422dd114b52a9af6c3e3797ca32394ebd4a))
+* **api:** api update ([0ad20fe](https://github.com/inboundemail/inbound-typescript-sdk/commit/0ad20fecf3bd20dddba107b21ab5944c7eee90b6))
+
+
+### Bug Fixes
+
+* **mcp:** add client instantiation options to code tool ([cf6642b](https://github.com/inboundemail/inbound-typescript-sdk/commit/cf6642bed6778b624007f12f327b553aac286107))
+* **mcp:** pass base url to code tool ([752a575](https://github.com/inboundemail/inbound-typescript-sdk/commit/752a575f67e70d88068b6b088d8d5fc9555f91d5))
+
+
+### Chores
+
+* **internal:** configure MCP Server hosting ([d4a7a76](https://github.com/inboundemail/inbound-typescript-sdk/commit/d4a7a7665c01b70b8dea8d835f761bbeeb5b18b9))
+* **mcp:** remove deprecated tool schemes ([a6b96bb](https://github.com/inboundemail/inbound-typescript-sdk/commit/a6b96bba798cb449560155ef6e682547e22aa5d9))
+
 ## 0.19.0 (2025-12-09)
 
 Full Changelog: [v0.18.0...v0.19.0](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.18.0...v0.19.0)
