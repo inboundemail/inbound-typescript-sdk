@@ -29,37 +29,6 @@ export class Emails extends APIResource {
   /**
    * List all email activity (sent, received, and scheduled) with comprehensive
    * filtering options.
-   *
-   * **Type Filtering:**
-   *
-   * - `all` - Returns sent, received, and scheduled emails combined (default)
-   * - `sent` - Only outbound emails you've sent
-   * - `received` - Only inbound emails you've received
-   * - `scheduled` - Only emails scheduled for future delivery
-   *
-   * **Status Filtering:**
-   *
-   * - `delivered` - Successfully delivered emails
-   * - `pending` - Emails currently being processed
-   * - `failed` - Emails that failed to deliver
-   * - `bounced` - Emails that bounced (sent only)
-   * - `scheduled` - Emails scheduled for future delivery
-   * - `cancelled` - Cancelled scheduled emails
-   * - `unread` - Unread received emails
-   * - `read` - Read received emails
-   * - `archived` - Archived received emails
-   *
-   * **Time Range Filtering:**
-   *
-   * - `1h` - Last hour
-   * - `24h` - Last 24 hours
-   * - `7d` - Last 7 days
-   * - `30d` - Last 30 days (default)
-   * - `90d` - Last 90 days
-   * - `all` - All time
-   *
-   * **Address Filtering:** Supports filtering by domain ID, domain name, address ID,
-   * or raw email address (e.g., 'user@example.com').
    */
   list(
     query: EmailListParams | null | undefined = {},
@@ -391,6 +360,12 @@ export interface EmailSendResponse {
   id: string;
 
   message_id?: string;
+
+  scheduled_at?: string;
+
+  status?: 'sent' | 'scheduled';
+
+  timezone?: string;
 }
 
 export interface EmailListParams {

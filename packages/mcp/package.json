@@ -1,0 +1,36 @@
+{
+  "name": "@inbound/mcp",
+  "version": "0.1.0",
+  "description": "MCP server for the Inbound Email API",
+  "author": "Inbound <sdk@inbound.new>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inboundemail/inbound-typescript-sdk.git",
+    "directory": "packages/mcp"
+  },
+  "homepage": "https://github.com/inboundemail/inbound-typescript-sdk/tree/main/packages/mcp#readme",
+  "packageManager": "pnpm@10.24.0",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "inbound-mcp": "./dist/stdio.js"
+  },
+  "scripts": {
+    "dev": "xmcp dev",
+    "build": "xmcp build",
+    "start:http": "node dist/http.js",
+    "start:stdio": "node dist/stdio.js"
+  },
+  "dependencies": {
+    "inboundemail": "^0.19.0",
+    "xmcp": "^0.5.4",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.6",
+    "typescript": "5.8.3"
+  }
+}
