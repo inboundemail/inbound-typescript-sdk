@@ -10,7 +10,11 @@ const client = new Inbound({
 describe('resource endpoints', () => {
   // Prism tests are disabled
   test.skip('create: only required params', async () => {
-    const responsePromise = client.endpoints.create({ config: { url: 'url' }, name: 'x', type: 'webhook' });
+    const responsePromise = client.endpoints.create({
+      config: { url: 'url' },
+      name: 'x',
+      type: 'webhook',
+    });
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -23,7 +27,12 @@ describe('resource endpoints', () => {
   // Prism tests are disabled
   test.skip('create: required and optional params', async () => {
     const response = await client.endpoints.create({
-      config: { url: 'url', headers: {}, retryAttempts: 0, timeout: 1 },
+      config: {
+        url: 'url',
+        headers: {},
+        retryAttempts: 0,
+        timeout: 1,
+      },
       name: 'x',
       type: 'webhook',
       description: 'description',
