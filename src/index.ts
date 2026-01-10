@@ -21,3 +21,16 @@ export {
   UnprocessableEntityError,
 } from './core/error';
 export { render } from './lib/render';
+export {
+  verifyWebhookFromHeaders,
+  type InboundWebhookPayload,
+  type InboundWebhookEmail,
+  type InboundWebhookEndpoint,
+  type InboundWebhookEvent,
+  type InboundWebhookHeaders,
+  type InboundEmailAddress,
+  type InboundAddressGroup,
+  type InboundEmailAttachment,
+  type InboundParsedEmailData,
+  type InboundCleanedContent,
+} from './lib/webhooks';
