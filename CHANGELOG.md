@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.20.1 (2026-01-13)
+
+Full Changelog: [v0.20.0...v0.20.1](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.20.0...v0.20.1)
+
+### Chores
+
+* **internal:** codegen related update ([c77730c](https://github.com/inboundemail/inbound-typescript-sdk/commit/c77730cb310c75052733c6de78bb9ddef32ace17))
+* **internal:** codegen related update ([b0eb246](https://github.com/inboundemail/inbound-typescript-sdk/commit/b0eb2461cbf26e0fdec92c5fce7f410cd7fc7f15))
+* **internal:** codegen related update ([e449225](https://github.com/inboundemail/inbound-typescript-sdk/commit/e449225cf64794658022be0df801ea469a322a26))
+* **internal:** codegen related update ([4f85f8f](https://github.com/inboundemail/inbound-typescript-sdk/commit/4f85f8ff7ab0bd805c30bc6b13185e174e719a97))
+
 ## 0.20.0 (2026-01-09)
 
 Full Changelog: [v0.19.0...v0.20.0](https://github.com/inboundemail/inbound-typescript-sdk/compare/v0.19.0...v0.20.0)
