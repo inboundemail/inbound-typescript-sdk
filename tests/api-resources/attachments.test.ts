@@ -8,7 +8,7 @@ const client = new Inbound({
 });
 
 describe('resource attachments', () => {
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('retrieve: only required params', async () => {
     const responsePromise = client.attachments.retrieve('filename', { id: 'id' });
     const rawResponse = await responsePromise.asResponse();
@@ -20,7 +20,7 @@ describe('resource attachments', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('retrieve: required and optional params', async () => {
     const response = await client.attachments.retrieve('filename', { id: 'id' });
   });

@@ -8,7 +8,7 @@ const client = new Inbound({
 });
 
 describe('resource emails', () => {
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('retrieve', async () => {
     const responsePromise = client.emails.retrieve('id');
     const rawResponse = await responsePromise.asResponse();
@@ -20,7 +20,7 @@ describe('resource emails', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('list', async () => {
     const responsePromise = client.emails.list();
     const rawResponse = await responsePromise.asResponse();
@@ -32,7 +32,7 @@ describe('resource emails', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('list: request options and params are passed correctly', async () => {
     // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
     await expect(
@@ -52,7 +52,7 @@ describe('resource emails', () => {
     ).rejects.toThrow(Inbound.NotFoundError);
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('delete', async () => {
     const responsePromise = client.emails.delete('id');
     const rawResponse = await responsePromise.asResponse();
@@ -64,7 +64,7 @@ describe('resource emails', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('reply: only required params', async () => {
     const responsePromise = client.emails.reply('id', { from: 'from' });
     const rawResponse = await responsePromise.asResponse();
@@ -76,7 +76,7 @@ describe('resource emails', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('reply: required and optional params', async () => {
     const response = await client.emails.reply('id', {
       from: 'from',
@@ -98,7 +98,7 @@ describe('resource emails', () => {
     });
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('retry', async () => {
     const responsePromise = client.emails.retry('id', {});
     const rawResponse = await responsePromise.asResponse();
@@ -110,7 +110,7 @@ describe('resource emails', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('send: only required params', async () => {
     const responsePromise = client.emails.send({
       from: 'from',
@@ -126,7 +126,7 @@ describe('resource emails', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('send: required and optional params', async () => {
     const response = await client.emails.send({
       from: 'from',

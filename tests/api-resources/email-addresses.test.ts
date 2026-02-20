@@ -8,7 +8,7 @@ const client = new Inbound({
 });
 
 describe('resource emailAddresses', () => {
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('create: only required params', async () => {
     const responsePromise = client.emailAddresses.create({ address: 'x', domainId: 'x' });
     const rawResponse = await responsePromise.asResponse();
@@ -20,7 +20,7 @@ describe('resource emailAddresses', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('create: required and optional params', async () => {
     const response = await client.emailAddresses.create({
       address: 'x',
@@ -31,7 +31,7 @@ describe('resource emailAddresses', () => {
     });
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('retrieve', async () => {
     const responsePromise = client.emailAddresses.retrieve('id');
     const rawResponse = await responsePromise.asResponse();
@@ -43,7 +43,7 @@ describe('resource emailAddresses', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('update', async () => {
     const responsePromise = client.emailAddresses.update('id', {});
     const rawResponse = await responsePromise.asResponse();
@@ -55,7 +55,7 @@ describe('resource emailAddresses', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('list', async () => {
     const responsePromise = client.emailAddresses.list();
     const rawResponse = await responsePromise.asResponse();
@@ -67,7 +67,7 @@ describe('resource emailAddresses', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('list: request options and params are passed correctly', async () => {
     // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
     await expect(
@@ -84,7 +84,7 @@ describe('resource emailAddresses', () => {
     ).rejects.toThrow(Inbound.NotFoundError);
   });
 
-  // Prism tests are disabled
+  // Mock server tests are disabled
   test.skip('delete', async () => {
     const responsePromise = client.emailAddresses.delete('id');
     const rawResponse = await responsePromise.asResponse();
