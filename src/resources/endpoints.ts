@@ -336,13 +336,29 @@ export namespace EndpointCreateParams {
   export interface EmailConfig {
     forwardTo: string;
 
+    fromAddress?: string;
+
+    includeAttachments?: boolean;
+
     preserveHeaders?: boolean;
+
+    senderName?: string;
+
+    subjectPrefix?: string;
   }
 
   export interface EmailGroupConfig {
     emails: Array<string>;
 
+    fromAddress?: string;
+
+    includeAttachments?: boolean;
+
     preserveHeaders?: boolean;
+
+    senderName?: string;
+
+    subjectPrefix?: string;
   }
 }
 
@@ -378,13 +394,29 @@ export namespace EndpointUpdateParams {
   export interface EmailConfig {
     forwardTo: string;
 
+    fromAddress?: string;
+
+    includeAttachments?: boolean;
+
     preserveHeaders?: boolean;
+
+    senderName?: string;
+
+    subjectPrefix?: string;
   }
 
   export interface EmailGroupConfig {
     emails: Array<string>;
 
+    fromAddress?: string;
+
+    includeAttachments?: boolean;
+
     preserveHeaders?: boolean;
+
+    senderName?: string;
+
+    subjectPrefix?: string;
   }
 }
 
