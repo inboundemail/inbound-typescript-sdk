@@ -60,7 +60,7 @@ $ yarn link inboundemail
 # With pnpm
 $ pnpm link --global
 $ cd ../my-package
-$ pnpm link -—global inboundemail
+$ pnpm link --global inboundemail
 ```
 
 ## Running tests
