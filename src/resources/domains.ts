@@ -6,6 +6,9 @@ import { RequestOptions } from '../internal/request-options';
 import { maybeMultipartFormRequestOptions } from '../internal/uploads';
 import { path } from '../internal/utils/path';
 
+/**
+ * Manage domains for sending and receiving emails. Domains must be verified via DNS before use.
+ */
 export class Domains extends APIResource {
   /**
    * Add a new domain for email receiving. Automatically initiates verification and

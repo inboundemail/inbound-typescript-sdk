@@ -6,6 +6,9 @@ import { RequestOptions } from '../internal/request-options';
 import { maybeMultipartFormRequestOptions } from '../internal/uploads';
 import { path } from '../internal/utils/path';
 
+/**
+ * Create and manage email addresses on your verified domains.
+ */
 export class EmailAddresses extends APIResource {
   /**
    * Create a new email address for an authenticated user's domain, optionally

@@ -774,10 +774,25 @@ export class Inbound {
 
   static toFile = Uploads.toFile;
 
+  /**
+   * Download email attachments using authenticated requests.
+   */
   attachments: API.Attachments = new API.Attachments(this);
+  /**
+   * Manage domains for sending and receiving emails. Domains must be verified via DNS before use.
+   */
   domains: API.Domains = new API.Domains(this);
+  /**
+   * Configure where incoming emails are delivered - webhooks, email forwarding, or custom handlers.
+   */
   endpoints: API.Endpoints = new API.Endpoints(this);
+  /**
+   * Create and manage email addresses on your verified domains.
+   */
   emailAddresses: API.EmailAddresses = new API.EmailAddresses(this);
+  /**
+   * Send, list, and manage emails. Supports immediate sending, scheduling, replies, and retry functionality.
+   */
   emails: API.Emails = new API.Emails(this);
   mail: API.Mail = new API.Mail(this);
 }

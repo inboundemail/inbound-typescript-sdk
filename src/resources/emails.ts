@@ -6,6 +6,9 @@ import { RequestOptions } from '../internal/request-options';
 import { maybeMultipartFormRequestOptions } from '../internal/uploads';
 import { path } from '../internal/utils/path';
 
+/**
+ * Send, list, and manage emails. Supports immediate sending, scheduling, replies, and retry functionality.
+ */
 export class Emails extends APIResource {
   /**
    * Retrieve a single email by ID. Works for sent, received, and scheduled emails.

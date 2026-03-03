@@ -6,6 +6,9 @@ import { buildHeaders } from '../internal/headers';
 import { RequestOptions } from '../internal/request-options';
 import { path } from '../internal/utils/path';
 
+/**
+ * Download email attachments using authenticated requests.
+ */
 export class Attachments extends APIResource {
   /**
    * Download an email attachment by email ID and filename. Returns the binary file

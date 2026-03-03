@@ -6,6 +6,9 @@ import { RequestOptions } from '../internal/request-options';
 import { maybeMultipartFormRequestOptions } from '../internal/uploads';
 import { path } from '../internal/utils/path';
 
+/**
+ * Configure where incoming emails are delivered - webhooks, email forwarding, or custom handlers.
+ */
 export class Endpoints extends APIResource {
   /**
    * Create a new endpoint (webhook, email, or email_group) for the authenticated
